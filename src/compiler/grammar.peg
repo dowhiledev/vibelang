@@ -215,13 +215,16 @@ ArgumentList <- first:Expression rest:ArgumentRest* {
 ArgumentRest <- Spacing "," Spacing e:Expression { $$ = e; }
 
 # Literal values
-StringLiteral <- '"' val:( [^"]* ) '"' {
-    char* str = strndup(val, val_end - val);
-    ast_node_t* node = create_ast_node(AST_STRING_LITERAL);
+StringLiteral <- '"' content:Char* '"' {
+    /* PackCC automatically provides 'content' and 'content_end' pointers */
+    char *str = strndup(content, content_end - content);
+    ast_node_t *node = create_ast_node(AST_STRING_LITERAL);
     ast_set_string(node, "value", str);
     free(str);
     $$ = node;
 }
+
+Char <- !["] .  # Match any character except unescaped quote
 
 IntLiteral <- [0-9]+ {
     ast_node_t* node = create_ast_node(AST_INT_LITERAL);

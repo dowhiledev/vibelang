@@ -3,10 +3,8 @@
 #ifndef PCC_INCLUDED_PARSER_H
 #define PCC_INCLUDED_PARSER_H
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
 #include "../utils/ast.h"
+#define YY_CTX_LOCAL 1
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,9 +12,8 @@ extern "C" {
 
 typedef struct vibe_context_tag vibe_context_t;
 
-vibe_context_t *vibe_create(const char *auxil);
-int vibe_parse(vibe_context_t *ctx, ast_node_t **ret);
-const char *vibe_get_error(vibe_context_t *ctx);
+vibe_context_t *vibe_create(void*auxil);
+int vibe_parse(vibe_context_t *ctx, int *ret);
 void vibe_destroy(vibe_context_t *ctx);
 
 #ifdef __cplusplus
