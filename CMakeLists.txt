@@ -5,8 +5,14 @@ project(vibelang VERSION 0.1.0 LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+# Find required packages
+find_package(CURL REQUIRED)
+find_package(cJSON REQUIRED)
+
 # Include directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CURL_INCLUDE_DIRS})
+include_directories(${CJSON_INCLUDE_DIRS})
 
 # Add PackCC as an external dependency
 include(ExternalProject)
@@ -38,6 +44,7 @@ set(COMPILER_SOURCES
     src/compiler/ast.c
     src/compiler/semantic.c
     src/compiler/codegen.c
+    src/compiler/symbol_table.c
 )
 
 set(RUNTIME_SOURCES
@@ -50,12 +57,19 @@ set(UTILS_SOURCES
     src/utils/file_utils.c
     src/utils/cache_utils.c
     src/utils/log_utils.c
+    src/utils/ast.c
 )
 
 # Targets
 add_library(vibelang_compiler STATIC ${COMPILER_SOURCES})
 add_library(vibelang_runtime STATIC ${RUNTIME_SOURCES})
 add_library(vibelang_utils STATIC ${UTILS_SOURCES})
+
+target_link_libraries(vibelang_runtime 
+    ${CURL_LIBRARIES}
+    ${CJSON_LIBRARIES}
+    dl  # For dynamic loading
+)
 
 # Main shared library
 add_library(vibelang SHARED
