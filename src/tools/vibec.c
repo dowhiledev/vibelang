@@ -1,57 +1,48 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libgen.h>
+#include <libgen.h>  // Add this for basename() function
+#include "../utils/file_utils.h"
 #include "../utils/ast.h"
 #include "../utils/log_utils.h"
-#include "../utils/file_utils.h"
-
-/* Include the parser header if available */
-#if __has_include("../compiler/parser.h")
 #include "../compiler/parser.h"
-#else
-/* Forward declare parser functions if header not available */
-typedef struct vibe_context_t vibe_context_t;
-vibe_context_t* vibe_create(const char* input);
-int vibe_parse(vibe_context_t* ctx, ast_node_t** ast);
-const char* vibe_get_error(vibe_context_t* ctx);
-void vibe_destroy(vibe_context_t* ctx);
-#endif
+#include "../compiler/parser_utils.h"
+#include "../utils/cache_utils.h"
 
-// Forward declarations
-extern int semantic_analyze(ast_node_t* ast);
-extern void semantic_cleanup(void);
+void print_usage(const char* program_name) {
+    fprintf(stderr, "Usage: %s [options] <input_file>\n", program_name);
+    fprintf(stderr, "Options:\n");
+    fprintf(stderr, "  -o <output_file>   Specify output file\n");
+    fprintf(stderr, "  -d                 Enable debug mode\n");
+    fprintf(stderr, "  -h                 Print this help message\n");
+}
+
+/**
+ * External functions from other modules
+ */
 extern int generate_code(ast_node_t* ast, const char* output_file);
 extern int cache_needs_update(const char* input_file, const char* output_file);
 
-void print_usage(const char* program_name) {
-    printf("VibeLang Compiler\n");
-    printf("Usage: %s [options] input_file\n", program_name);
-    printf("\nOptions:\n");
-    printf("  -o <file>   Specify output file\n");
-    printf("  -c          Compile only, don't link\n");
-    printf("  -v          Verbose output\n");
-    printf("  -h          Display this help message\n");
+// Custom basename function to avoid platform-specific issues
+char* get_basename(char* path) {
+    char* last_slash = strrchr(path, '/');
+    if (last_slash != NULL) {
+        return last_slash + 1;
+    }
+    return path;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char** argv) {
     char* input_file = NULL;
     char* output_file = NULL;
-    int compile_only = 0;
-    int verbose = 0;
+    int debug_mode = 0;
     
-    // Initialize logging
-    log_init(LOG_LEVEL_INFO);
-    
-    // Parse command-line arguments
+    // Parse command line arguments
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
             output_file = argv[++i];
-        } else if (strcmp(argv[i], "-c") == 0) {
-            compile_only = 1;
-        } else if (strcmp(argv[i], "-v") == 0) {
-            verbose = 1;
-            log_set_level(LOG_LEVEL_DEBUG);
+        } else if (strcmp(argv[i], "-d") == 0) {
+            debug_mode = 1;
         } else if (strcmp(argv[i], "-h") == 0) {
             print_usage(argv[0]);
             return 0;
@@ -60,123 +51,105 @@ int main(int argc, char *argv[]) {
             print_usage(argv[0]);
             return 1;
         } else {
-            if (input_file != NULL) {
-                fprintf(stderr, "Multiple input files specified\n");
-                print_usage(argv[0]);
-                return 1;
-            }
             input_file = argv[i];
         }
     }
     
-    if (input_file == NULL) {
-        fprintf(stderr, "No input file specified\n");
+    // Set log level based on debug mode flag
+    if (debug_mode) {
+        set_log_level(LOG_LEVEL_DEBUG);
+    } else {
+        set_log_level(LOG_LEVEL_INFO);
+    }
+    
+    // Check if input file is provided
+    if (!input_file) {
+        fprintf(stderr, "Error: No input file specified\n");
         print_usage(argv[0]);
         return 1;
     }
-    
-    // If no output file specified, use input file name with .c extension
+
+    // Generate output filename if not specified
     if (output_file == NULL) {
         char* input_copy = strdup(input_file);
-        char* base = basename(input_copy);
+        char* base = get_basename(input_copy); // Use our custom function instead of basename
         
-        // Replace or append .c extension
+        // Create output file name with .c extension
         char* dot = strrchr(base, '.');
         if (dot != NULL) {
-            *dot = '\0';
+            *dot = '\0';  // Truncate at the extension
         }
         
-        output_file = malloc(strlen(base) + 3);
+        output_file = malloc(strlen(base) + 3); // +3 for .c and null terminator
         sprintf(output_file, "%s.c", base);
         free(input_copy);
     }
     
-    if (verbose) {
-        INFO("Input file: %s", input_file);
-        INFO("Output file: %s", output_file);
-    }
-    
-    // Check if the cache is up-to-date
-    if (!compile_only && cache_needs_update(input_file, output_file)) {
+    INFO("Input file: %s", input_file);
+    INFO("Output file: %s", output_file);
+
+    // Check if we need to recompile based on timestamps
+    if (!cache_needs_update(input_file, output_file)) {
         INFO("Output is up to date, skipping compilation");
-        free(output_file);
         return 0;
     }
-    
-    // Read the input file
+
+    // Read input file
     char* source = read_file(input_file);
     if (!source) {
         ERROR("Failed to read input file: %s", input_file);
-        free(output_file);
         return 1;
     }
-    
-    // Parse the source code
-    INFO("Parsing %s...", input_file);
+
+    // Create parser context
     vibe_context_t* ctx = vibe_create(source);
     if (!ctx) {
         ERROR("Failed to create parser context");
         free(source);
-        free(output_file);
         return 1;
     }
+
+    // Parse the code
+    INFO("Parsing %s...", input_file);
     
     ast_node_t* ast = NULL;
     if (vibe_parse(ctx, &ast) && ast) {
         INFO("Parsing successful");
-        
-        if (verbose) {
-            INFO("AST structure:");
+
+        // Debug: print AST if debug mode is on
+        if (debug_mode) {
             ast_print(ast, 0);
         }
-        
-        // Perform semantic analysis
-        INFO("Performing semantic analysis...");
-        if (semantic_analyze(ast)) {
-            INFO("Semantic analysis successful");
-            
-            // Generate code
-            INFO("Generating code...");
-            if (generate_code(ast, output_file)) {
-                INFO("Code generation successful");
-                
-                if (!compile_only) {
-                    INFO("Compiling generated C code...");
-                    // Compile the generated C code
-                    char cmd[512];
-                    snprintf(cmd, sizeof(cmd), "gcc -shared -fPIC %s -o %s.so", 
-                            output_file, output_file);
-                    
-                    int result = system(cmd);
-                    if (result == 0) {
-                        INFO("Compilation successful: %s.so", output_file);
-                    } else {
-                        ERROR("C compilation failed");
-                    }
-                }
-            } else {
-                ERROR("Code generation failed");
-            }
+
+        // Generate code
+        INFO("Generating code...");
+        if (generate_code(ast, output_file)) {
+            INFO("Code generation completed successfully");
         } else {
-            ERROR("Semantic analysis failed");
+            ERROR("Code generation failed");
+            vibe_destroy(ctx);
+            free(source);
+            if (ast) ast_node_free(ast);
+            return 1;
         }
         
-        // Clean up semantic analyzer resources
-        semantic_cleanup();
-        
-        // Clean up AST
+        // Clean up
         ast_node_free(ast);
     } else {
         ERROR("Parsing failed");
         vibe_destroy(ctx);
         free(source);
-        free(output_file);
         return 1;
     }
-    
+
+    // Clean up
     vibe_destroy(ctx);
     free(source);
-    free(output_file);
+    
+    // Free the output filename if it was dynamically allocated
+    if (output_file != argv[2]) {
+        free(output_file);
+    }
     
     return 0;
 }

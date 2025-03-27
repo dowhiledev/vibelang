@@ -2,129 +2,152 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <time.h>
+#include <string.h>
 #include "log_utils.h"
 
-static log_level_t current_log_level = LOG_LEVEL_INFO;
-static const char* level_names[] = {
-    "DEBUG", "INFO", "WARNING", "ERROR", "FATAL"
-};
-static const char* level_colors[] = {
-    "\x1b[36m", "\x1b[32m", "\x1b[33m", "\x1b[31m", "\x1b[35m"
-};
-static const char* reset_color = "\x1b[0m";
+// Global variables for logging
+static FILE* log_file = NULL;
+static log_level_t current_log_level = LOG_LEVEL_INFO;  // Default log level
 
-void log_init(log_level_t min_level) {
-    current_log_level = min_level;
+// Initialize logging system
+void init_logging(log_level_t level) {
+    current_log_level = level;
+    
+    // Try to open log file in current directory first
+    log_file = fopen("vibelang_debug.log", "a");
+    
+    // If that fails, try /tmp directory
+    if (!log_file) {
+        log_file = fopen("/tmp/vibelang_debug.log", "a");
+    }
+    
+    // Log header if file was opened
+    if (log_file) {
+        time_t now = time(NULL);
+        fprintf(log_file, "\n--- VibeLang Log Session Started at %s", ctime(&now));
+        fflush(log_file);
+    }
 }
 
-void log_set_level(log_level_t level) {
+// Set log level
+void set_log_level(log_level_t level) {
     current_log_level = level;
 }
 
-log_level_t log_get_level(void) {
-    return current_log_level;
-}
-
-static void log_message(log_level_t level, const char* file, int line, const char* format, va_list args) {
-    if (level < current_log_level) {
-        return;
-    }
-
-    time_t now;
-    struct tm* timeinfo;
-    char timestamp[20];
-
-    time(&now);
-    timeinfo = localtime(&now);
-    strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", timeinfo);
-
-    fprintf(stderr, "%s%s %s%s", level_colors[level], level_names[level], reset_color, timestamp);
-    
-    if (file) {
-        fprintf(stderr, " %s:%d", file, line);
+// Set log file path
+void set_log_file(const char* filepath) {
+    // Close existing log file if open
+    if (log_file) {
+        fclose(log_file);
+        log_file = NULL;
     }
     
-    fprintf(stderr, ": ");
-    vfprintf(stderr, format, args);
-    fprintf(stderr, "\n");
-    
-    // Flush for immediate output
-    fflush(stderr);
-    
-    // Exit on fatal error
-    if (level == LOG_LEVEL_FATAL) {
-        exit(EXIT_FAILURE);
+    // Open new log file
+    if (filepath) {
+        log_file = fopen(filepath, "a");
     }
 }
 
-/* Standard log functions */
+// Close logging system
+void close_logging(void) {
+    if (log_file) {
+        time_t now = time(NULL);
+        fprintf(log_file, "--- VibeLang Log Session Ended at %s\n", ctime(&now));
+        fclose(log_file);
+        log_file = NULL;
+    }
+}
+
+// Debug level log
 void log_debug(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    log_message(LOG_LEVEL_DEBUG, NULL, 0, format, args);
-    va_end(args);
+    if (current_log_level <= LOG_LEVEL_DEBUG) {
+        va_list args;
+        va_start(args, format);
+        
+        // Log to file if available
+        if (log_file) {
+            fprintf(log_file, "[DEBUG] ");
+            vfprintf(log_file, format, args);
+            fprintf(log_file, "\n");
+            fflush(log_file);
+        }
+        
+        // Also log to stdout for debug messages
+        if (getenv("DEBUG_CONSOLE")) {
+            printf("\033[36m[DEBUG] ");  // Cyan color
+            vprintf(format, args);
+            printf("\033[0m\n");  // Reset color
+        }
+        
+        va_end(args);
+    }
 }
 
+// Info level log
 void log_info(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    log_message(LOG_LEVEL_INFO, NULL, 0, format, args);
-    va_end(args);
+    if (current_log_level <= LOG_LEVEL_INFO) {
+        va_list args;
+        va_start(args, format);
+        
+        // Log to file if available
+        if (log_file) {
+            fprintf(log_file, "[INFO] ");
+            vfprintf(log_file, format, args);
+            fprintf(log_file, "\n");
+            fflush(log_file);
+        }
+        
+        // Also log to stdout for info messages
+        printf("\033[32m[INFO] ");  // Green color
+        vprintf(format, args);
+        printf("\033[0m\n");  // Reset color
+        
+        va_end(args);
+    }
 }
 
-void log_warning(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    log_message(LOG_LEVEL_WARNING, NULL, 0, format, args);
-    va_end(args);
+// Warning level log
+void log_warn(const char* format, ...) {
+    if (current_log_level <= LOG_LEVEL_WARN) {
+        va_list args;
+        va_start(args, format);
+        
+        // Log to file if available
+        if (log_file) {
+            fprintf(log_file, "[WARN] ");
+            vfprintf(log_file, format, args);
+            fprintf(log_file, "\n");
+            fflush(log_file);
+        }
+        
+        // Also log to stderr for warnings
+        fprintf(stderr, "\033[33m[WARN] ");  // Yellow color
+        vfprintf(stderr, format, args);
+        fprintf(stderr, "\033[0m\n");  // Reset color
+        
+        va_end(args);
+    }
 }
 
+// Error level log
 void log_error(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    log_message(LOG_LEVEL_ERROR, NULL, 0, format, args);
-    va_end(args);
-}
-
-void log_fatal(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    log_message(LOG_LEVEL_FATAL, NULL, 0, format, args);
-    va_end(args);
-}
-
-/* Log with source location */
-void log_debug_at(const char* file, int line, const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    log_message(LOG_LEVEL_DEBUG, file, line, format, args);
-    va_end(args);
-}
-
-void log_info_at(const char* file, int line, const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    log_message(LOG_LEVEL_INFO, file, line, format, args);
-    va_end(args);
-}
-
-void log_warning_at(const char* file, int line, const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    log_message(LOG_LEVEL_WARNING, file, line, format, args);
-    va_end(args);
-}
-
-void log_error_at(const char* file, int line, const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    log_message(LOG_LEVEL_ERROR, file, line, format, args);
-    va_end(args);
-}
-
-void log_fatal_at(const char* file, int line, const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    log_message(LOG_LEVEL_FATAL, file, line, format, args);
-    va_end(args);
+    if (current_log_level <= LOG_LEVEL_ERROR) {
+        va_list args;
+        va_start(args, format);
+        
+        // Log to file if available
+        if (log_file) {
+            fprintf(log_file, "[ERROR] ");
+            vfprintf(log_file, format, args);
+            fprintf(log_file, "\n");
+            fflush(log_file);
+        }
+        
+        // Always log errors to stderr
+        fprintf(stderr, "\033[31m[ERROR] ");  // Red color
+        vfprintf(stderr, format, args);
+        fprintf(stderr, "\033[0m\n");  // Reset color
+        
+        va_end(args);
+    }
 }

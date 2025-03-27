@@ -53,7 +53,7 @@ VibeError vibelang_init() {
     
     // Load configuration
     if (!load_config_from_file("vibeconfig.json")) {
-        WARNING("Failed to load configuration file, using defaults");
+        WARN("Failed to load configuration file, using defaults");
     }
     
     // Initialize LLM interface
