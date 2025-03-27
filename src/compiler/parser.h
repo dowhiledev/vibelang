@@ -16,6 +16,7 @@ typedef struct vibe_context_tag vibe_context_t;
 
 vibe_context_t *vibe_create(const char *auxil);
 int vibe_parse(vibe_context_t *ctx, ast_node_t **ret);
+const char *vibe_get_error(vibe_context_t *ctx);
 void vibe_destroy(vibe_context_t *ctx);
 
 #ifdef __cplusplus
