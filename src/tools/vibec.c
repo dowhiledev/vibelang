@@ -5,7 +5,18 @@
 #include "../utils/ast.h"
 #include "../utils/log_utils.h"
 #include "../utils/file_utils.h"
+
+/* Include the parser header if available */
+#if __has_include("../compiler/parser.h")
 #include "../compiler/parser.h"
+#else
+/* Forward declare parser functions if header not available */
+typedef struct vibe_context_t vibe_context_t;
+vibe_context_t* vibe_create(const char* input);
+int vibe_parse(vibe_context_t* ctx, ast_node_t** ast);
+const char* vibe_get_error(vibe_context_t* ctx);
+void vibe_destroy(vibe_context_t* ctx);
+#endif
 
 // Forward declarations
 extern int semantic_analyze(ast_node_t* ast);

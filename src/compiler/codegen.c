@@ -10,8 +10,8 @@ static void generate_program(FILE* out, ast_node_t* node);
 static void generate_type_declaration(FILE* out, ast_node_t* node);
 static void generate_function_declaration(FILE* out, ast_node_t* node);
 static void generate_function_prototype(FILE* out, ast_node_t* node);
-static void generate_function_body(FILE* out, ast_node_t* node);
-static void generate_prompt_block(FILE* out, ast_node_t* node);
+static void generate_function_body(FILE* out, ast_node_t* node, symbol_scope_t* func_scope);
+static void generate_prompt_block(FILE* out, ast_node_t* node, symbol_scope_t* func_scope);
 static void generate_statement(FILE* out, ast_node_t* node, int indent);
 static void generate_var_declaration(FILE* out, ast_node_t* node, int indent);
 static void generate_expression_statement(FILE* out, ast_node_t* node, int indent);
@@ -20,6 +20,11 @@ static void generate_block(FILE* out, ast_node_t* node, int indent);
 static void generate_expression(FILE* out, ast_node_t* node);
 static void generate_call_expression(FILE* out, ast_node_t* node);
 static void generate_class_declaration(FILE* out, ast_node_t* node);
+
+// Add new forward declarations
+static symbol_scope_t* analyze_function_scope(ast_node_t* func_node);
+static void collect_variables_in_scope(symbol_scope_t* scope, char*** names, char*** types, int* count);
+static void generate_template_substitution(FILE* out, ast_node_t* node, symbol_scope_t* func_scope, int indent);
 
 /* Helper functions */
 static const char* get_c_type_for_vibe_type(ast_node_t* type_node);
@@ -55,7 +60,13 @@ static void generate_standard_headers(FILE* out) {
     fprintf(out, "#include <stdio.h>\n");
     fprintf(out, "#include <stdlib.h>\n");
     fprintf(out, "#include <string.h>\n");
-    fprintf(out, "#include \"vibelang.h\"\n\n");
+    fprintf(out, "#include \"vibelang.h\"\n");
+    fprintf(out, "#include \"vibelang/runtime.h\"\n\n");
+    
+    // Add runtime function declarations if they'll be used
+    fprintf(out, "// Forward declarations for runtime functions\n");
+    fprintf(out, "extern VibeValue* vibe_execute_prompt(const char* prompt);\n");
+    fprintf(out, "extern char* format_prompt(const char* template, char** var_names, char** var_values, int var_count);\n\n");
 }
 
 /* Generate code for a program (top-level) */
@@ -222,21 +233,34 @@ static void generate_function_declaration(FILE* out, ast_node_t* node) {
         }
     }
     
-    fprintf(out, ") {\n");
+    // Find function body and analyze scope to collect variables
+    ast_node_t* body = NULL;
+    symbol_scope_t* func_scope = analyze_function_scope(node);
     
-    // Find function body
     for (size_t i = 0; i < node->child_count; i++) {
         if (node->children[i]->type == AST_FUNCTION_BODY) {
-            generate_function_body(out, node->children[i]);
+            body = node->children[i];
             break;
         }
     }
     
+    fprintf(out, ") {\n");
+    
+    // Generate function body with scope information
+    if (body) {
+        generate_function_body(out, body, func_scope);
+    }
+    
     fprintf(out, "}\n\n");
+    
+    // Clean up scope
+    if (func_scope) {
+        free_symbol_scope(func_scope);
+    }
 }
 
 /* Generate function body */
-static void generate_function_body(FILE* out, ast_node_t* node) {
+static void generate_function_body(FILE* out, ast_node_t* node, symbol_scope_t* func_scope) {
     ast_node_t* prompt_block = NULL;
     
     // Process statements and find prompt block (if any)
@@ -250,14 +274,14 @@ static void generate_function_body(FILE* out, ast_node_t* node) {
         }
     }
     
-    // If there's a prompt block, generate it last
+    // If there's a prompt block, generate it last with variable substitution
     if (prompt_block) {
-        generate_prompt_block(out, prompt_block);
+        generate_prompt_block(out, prompt_block, func_scope);
     }
 }
 
 /* Generate prompt block */
-static void generate_prompt_block(FILE* out, ast_node_t* node) {
+static void generate_prompt_block(FILE* out, ast_node_t* node, symbol_scope_t* func_scope) {
     const char* template = ast_get_string(node, "template");
     if (!template) return;
     
@@ -271,29 +295,237 @@ static void generate_prompt_block(FILE* out, ast_node_t* node) {
     write_indentation(out, 2);
     fprintf(out, "VibeValue* prompt_result = NULL;\n");
     
-    write_indentation(out, 2);
-    fprintf(out, "const char* prompt_template = \"%s\";\n", template);
+    // Generate variable substitution code
+    generate_template_substitution(out, node, func_scope, 2);
     
     write_indentation(out, 2);
-    fprintf(out, "// TODO: Replace placeholders in prompt template with variable values\n");
-    
-    write_indentation(out, 2);
-    fprintf(out, "prompt_result = vibe_execute_prompt(prompt_template);\n");
+    fprintf(out, "prompt_result = vibe_execute_prompt(formatted_prompt);\n");
     
     write_indentation(out, 2);
     fprintf(out, "if (prompt_result) {\n");
     
+    // Add proper type conversion based on the function return type
     write_indentation(out, 3);
-    fprintf(out, "// TODO: Convert LLM response to appropriate return type\n");
+    fprintf(out, "// Convert LLM response to the appropriate return type\n");
     
-    write_indentation(out, 3);
-    fprintf(out, "return vibe_value_get_as_native(prompt_result);\n");
+    // Determine the type of the containing function
+    ast_node_t* func_node = NULL;
+    ast_node_t* parent = node;
+    while (parent && parent->type != AST_FUNCTION_DECL) {
+        // Look for function body parent
+        for (size_t i = 0; i < node->child_count; i++) {
+            if (parent->children[i]->type == AST_FUNCTION_BODY) {
+                parent = parent->children[i];
+                break;
+            }
+        }
+    }
+    
+    if (parent && parent->type == AST_FUNCTION_DECL) {
+        // Find return type of the function
+        for (size_t i = 0; i < parent->child_count; i++) {
+            if (parent->children[i]->type == AST_BASIC_TYPE || 
+                parent->children[i]->type == AST_MEANING_TYPE) {
+                // Generate appropriate conversion based on type
+                const char* type_str = get_c_type_for_vibe_type(parent->children[i]);
+                
+                if (strcmp(type_str, "int") == 0) {
+                    write_indentation(out, 3);
+                    fprintf(out, "return vibe_value_get_int(prompt_result);\n");
+                } else if (strcmp(type_str, "double") == 0) {
+                    write_indentation(out, 3);
+                    fprintf(out, "return vibe_value_get_float(prompt_result);\n");
+                } else if (strcmp(type_str, "const char*") == 0) {
+                    write_indentation(out, 3);
+                    fprintf(out, "return vibe_value_get_string(prompt_result);\n");
+                } else if (strcmp(type_str, "int") == 0 && strstr(type_str, "Bool")) {
+                    write_indentation(out, 3);
+                    fprintf(out, "return vibe_value_get_bool(prompt_result);\n");
+                } else {
+                    // Default case - just return the string value
+                    write_indentation(out, 3);
+                    fprintf(out, "return vibe_value_get_string(prompt_result);\n");
+                }
+                break;
+            }
+        }
+    } else {
+        // Default - just return the string value
+        write_indentation(out, 3);
+        fprintf(out, "return vibe_value_get_string(prompt_result);\n");
+    }
     
     write_indentation(out, 2);
     fprintf(out, "}\n");
     
+    write_indentation(out, 2);
+    fprintf(out, "// Free resources\n");
+    write_indentation(out, 2);
+    fprintf(out, "free(formatted_prompt);\n");
+    write_indentation(out, 2);
+    fprintf(out, "for (int i = 0; i < var_count; i++) {\n");
+    write_indentation(out, 3);
+    fprintf(out, "free(var_values[i]);\n");
+    write_indentation(out, 2);
+    fprintf(out, "}\n");
+    write_indentation(out, 2);
+    fprintf(out, "free(var_names);\n");
+    write_indentation(out, 2);
+    fprintf(out, "free(var_values);\n");
+    
+    // Add a default return value based on function type
+    write_indentation(out, 2);
+    fprintf(out, "// Default return if prompt fails\n");
+    write_indentation(out, 2);
+    fprintf(out, "return NULL; // Should be replaced with appropriate default\n");
+    
     write_indentation(out, 1);
     fprintf(out, "}\n");
+}
+
+/* Generate template variable substitution */
+static void generate_template_substitution(FILE* out, ast_node_t* node, symbol_scope_t* func_scope, int indent) {
+    const char* template = ast_get_string(node, "template");
+    if (!template) return;
+    
+    // Collect variables in the scope
+    char** var_names = NULL;
+    char** var_types = NULL;
+    int var_count = 0;
+    
+    collect_variables_in_scope(func_scope, &var_names, &var_types, &var_count);
+    
+    // Generate variable arrays
+    write_indentation(out, indent);
+    fprintf(out, "const char* prompt_template = \"%s\";\n", template);
+    
+    write_indentation(out, indent);
+    fprintf(out, "int var_count = %d;\n", var_count);
+    
+    write_indentation(out, indent);
+    fprintf(out, "char** var_names = malloc(sizeof(char*) * var_count);\n");
+    
+    write_indentation(out, indent);
+    fprintf(out, "char** var_values = malloc(sizeof(char*) * var_count);\n");
+    
+    // Populate variable arrays
+    for (int i = 0; i < var_count; i++) {
+        write_indentation(out, indent);
+        fprintf(out, "var_names[%d] = \"%s\";\n", i, var_names[i]);
+        
+        // Generate value conversion based on type
+        write_indentation(out, indent);
+        
+        if (strstr(var_types[i], "int") || strstr(var_types[i], "Int")) {
+            fprintf(out, "var_values[%d] = malloc(32); sprintf(var_values[%d], \"%%d\", %s);\n", 
+                    i, i, var_names[i]);
+        } else if (strstr(var_types[i], "float") || strstr(var_types[i], "Float") || 
+                  strstr(var_types[i], "double")) {
+            fprintf(out, "var_values[%d] = malloc(32); sprintf(var_values[%d], \"%%g\", %s);\n", 
+                    i, i, var_names[i]);
+        } else if (strstr(var_types[i], "bool") || strstr(var_types[i], "Bool")) {
+            fprintf(out, "var_values[%d] = strdup(%s ? \"true\" : \"false\");\n", i, var_names[i]);
+        } else if (strstr(var_types[i], "char") || strstr(var_types[i], "String")) {
+            fprintf(out, "var_values[%d] = strdup(%s ? %s : \"\");\n", i, var_names[i], var_names[i]);
+        } else {
+            fprintf(out, "var_values[%d] = strdup(\"(unknown)\");\n", i);
+        }
+    }
+    
+    // Format the prompt template
+    write_indentation(out, indent);
+    fprintf(out, "char* formatted_prompt = format_prompt(prompt_template, var_names, var_values, var_count);\n");
+    
+    // Clean up
+    if (var_names) free(var_names);
+    if (var_types) free(var_types);
+}
+
+/* Analyze function and build scope with parameters and variables */
+static symbol_scope_t* analyze_function_scope(ast_node_t* func_node) {
+    if (!func_node) return NULL;
+    
+    symbol_scope_t* scope = create_symbol_scope(NULL, func_node);
+    if (!scope) return NULL;
+    
+    // Add parameters to scope
+    for (size_t i = 0; i < func_node->child_count; i++) {
+        ast_node_t* child = func_node->children[i];
+        
+        if (child->type == AST_PARAM_LIST) {
+            for (size_t j = 0; j < child->child_count; j++) {
+                ast_node_t* param = child->children[j];
+                const char* name = ast_get_string(param, "name");
+                
+                if (name && param->child_count > 0) {
+                    ast_node_t* type_node = param->children[0];
+                    symbol_add(scope, name, SYM_PARAMETER, param, type_node);
+                }
+            }
+        } else if (child->type == AST_FUNCTION_BODY) {
+            // Add local variables from function body
+            for (size_t j = 0; j < child->child_count; j++) {
+                ast_node_t* stmt = child->children[j];
+                
+                if (stmt->type == AST_VAR_DECL) {
+                    const char* name = ast_get_string(stmt, "name");
+                    
+                    if (name) {
+                        // Find variable type
+                        ast_node_t* type_node = NULL;
+                        for (size_t k = 0; k < stmt->child_count; k++) {
+                            if (stmt->children[k]->type == AST_BASIC_TYPE || 
+                                stmt->children[k]->type == AST_MEANING_TYPE) {
+                                type_node = stmt->children[k];
+                                break;
+                            }
+                        }
+                        
+                        symbol_add(scope, name, SYM_VAR, stmt, type_node);
+                    }
+                }
+            }
+        }
+    }
+    
+    return scope;
+}
+
+/* Collect variables from scope into arrays */
+static void collect_variables_in_scope(symbol_scope_t* scope, char*** names, char*** types, int* count) {
+    if (!scope) return;
+    
+    // Count symbols
+    int total = 0;
+    symbol_t* sym = scope->symbols;
+    while (sym) {
+        if (sym->kind == SYM_PARAMETER || sym->kind == SYM_VAR) {
+            total++;
+        }
+        sym = sym->next;
+    }
+    
+    // Allocate arrays
+    *names = malloc(sizeof(char*) * total);
+    *types = malloc(sizeof(char*) * total);
+    *count = total;
+    
+    // Fill arrays
+    int i = 0;
+    sym = scope->symbols;
+    while (sym) {
+        if (sym->kind == SYM_PARAMETER || sym->kind == SYM_VAR) {
+            (*names)[i] = strdup(sym->name);
+            
+            if (sym->type_node) {
+                (*types)[i] = strdup(get_c_type_for_vibe_type(sym->type_node));
+            } else {
+                (*types)[i] = strdup("unknown");
+            }
+            i++;
+        }
+        sym = sym->next;
+    }
 }
 
 /* Generate statement */
