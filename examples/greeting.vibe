@@ -1,0 +1,18 @@
+// Custom greeting generator example
+
+type Greeting = Meaning<String>("a friendly greeting");
+type Language = Meaning<String>("language name");
+
+fn generateGreeting(name: Meaning<String>("person's name"), 
+                   language: Language) -> Greeting {
+    prompt "Generate a friendly greeting for a person named {name} in {language}."
+}
+
+fn main() {
+    let languages = ["English", "Spanish", "French", "Japanese"];
+    
+    for (let i = 0; i < 4; i++) {
+        let greeting = generateGreeting("Alex", languages[i]);
+        print("{greeting}");
+    }
+}

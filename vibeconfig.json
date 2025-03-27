@@ -1,0 +1,20 @@
+{
+  "global": {
+    "provider": "OpenAI",
+    "api_key": "your-api-key",
+    "default_params": {
+      "model": "gpt-4",
+      "temperature": 0.7,
+      "max_tokens": 150
+    }
+  },
+  "overrides": {
+    "getTemperature": {
+      "temperature": 0.5,
+      "max_tokens": 100
+    },
+    "greet": {
+      "temperature": 0.9
+    }
+  }
+}
