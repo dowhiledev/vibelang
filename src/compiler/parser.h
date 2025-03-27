@@ -5,7 +5,15 @@
 
 #include "../utils/ast.h"
 #include "parser_utils.h"
+
+// Use YY_CTX_LOCAL to avoid thread-local context issues
 #define YY_CTX_LOCAL 1
+
+// Define maximum stack size to prevent infinite recursion
+#define YY_MAX_STACK_SIZE 1000
+
+// Define maximum repetition count to prevent infinite loops
+#define PCC_INFINITE_LOOP_DETECT 1000
 
 #ifdef __cplusplus
 extern "C" {

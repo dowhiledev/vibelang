@@ -15,7 +15,7 @@ extern const char* vibe_get_error_message();
 /* Initialize library */
 __attribute__((constructor))
 static void init() {
-    log_init(LOG_LEVEL_INFO);
+    set_log_level(LOG_LEVEL_INFO);
     INFO("VibeLang library loaded");
 }
 

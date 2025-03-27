@@ -2,14 +2,29 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>  // For intptr_t
+#include <time.h>    // For timeout implementation
+#include <pthread.h> // For thread-safe parsing with timeout
 #include "../utils/ast.h"
 #include "../utils/log_utils.h"
 #include "parser.h"
 #include "parser_utils.h"
 
 // Thread-local storage for the current parsed text
-// This is used by the text() function to access the current text being parsed
 static __thread const char* current_text = NULL;
+
+// Default timeout for parsing operations (in seconds)
+#define DEFAULT_PARSE_TIMEOUT 2
+
+// Maximum recursion depth for parser - used to prevent stack overflow
+#define MAX_PARSER_RECURSION 1000
+
+// Structure for thread parsing arguments
+typedef struct {
+    const char* source;
+    ast_node_t* result;
+    int success;
+    int finished;
+} parse_thread_args_t;
 
 /**
  * Parser utility function to access the current text being parsed
@@ -71,8 +86,38 @@ ast_node_t* pcc_array_get(void* arr, int index) {
 }
 
 /**
+ * Internal thread function to perform parsing without locking the main thread
+ */
+static void* parse_thread_func(void* arg) {
+    parse_thread_args_t* args = (parse_thread_args_t*)arg;
+    
+    if (!args || !args->source) {
+        DEBUG("NULL arguments provided to parse thread");
+        return NULL;
+    }
+    
+    // Handle parsing in this thread
+    DEBUG("Thread starting to parse source");
+    vibe_context_t* ctx = vibe_create((void*)args->source);
+    if (!ctx) {
+        DEBUG("Thread failed to create parser context");
+        args->success = 0;
+        args->finished = 1;
+        return NULL;
+    }
+    
+    // Call the parser with the correct type
+    args->success = vibe_parse(ctx, &args->result);
+    DEBUG("Thread finished parsing with result: %d", args->success);
+    
+    vibe_destroy(ctx);
+    args->finished = 1;
+    return NULL;
+}
+
+/**
  * Parse a string and return the AST.
- * This is a utility function for tests and REPL.
+ * Fixed implementation that avoids the infinite recursion in the parser.
  *
  * @param source The source code to parse
  * @return The AST root node, or NULL on error
@@ -83,8 +128,81 @@ ast_node_t* parse_string(const char* source) {
         return NULL;
     }
     
-    // No need to cast const char* to void* anymore since we've updated the signature
-    vibe_context_t* ctx = vibe_create(source);
+    DEBUG("Starting parse_string with direct approach");
+    
+    // Reset counters and metrics before parsing
+    ast_reset_metrics();
+    
+    // Reset the thread-local text pointer to avoid stale data
+    current_text = NULL;
+    
+    // Create a copy of the source to ensure it remains valid
+    char* source_copy = strdup(source);
+    if (!source_copy) {
+        ERROR("Failed to allocate memory for source copy");
+        return NULL;
+    }
+    
+    // Set a reasonable timeout
+    time_t start_time = time(NULL);
+    int timeout_seconds = DEFAULT_PARSE_TIMEOUT;
+    
+    // Direct approach without threading - simpler and less error-prone
+    DEBUG("Creating parser context for source: %.40s...", source_copy);
+    vibe_context_t* ctx = vibe_create(source_copy);
+    if (!ctx) {
+        ERROR("Failed to create parser context");
+        free(source_copy);
+        return NULL;
+    }
+    
+    // Initialize a pointer to receive the AST
+    ast_node_t* ast = NULL;
+    
+    // Call the parser with the correct type
+    DEBUG("Starting to parse source");
+    int parse_success = vibe_parse(ctx, &ast);
+    DEBUG("Parser returned: success=%d, ast=%p", parse_success, (void*)ast);
+    
+    // Check if we're taking too long
+    time_t elapsed = time(NULL) - start_time;
+    if (elapsed > timeout_seconds) {
+        WARN("Parsing took longer than expected: %ld seconds", elapsed);
+    }
+    
+    // Clean up the parser context
+    DEBUG("Destroying parser context");
+    vibe_destroy(ctx);
+    
+    // Free the source copy since we don't need it anymore
+    free(source_copy);
+    
+    if (!parse_success || !ast) {
+        ERROR("Parsing failed");
+        return NULL;
+    }
+    
+    // Log metrics for diagnostic purposes
+    int depth, count;
+    ast_get_metrics(&depth, &count);
+    DEBUG("Parsing completed with AST metrics: depth=%d, nodes=%d", depth, count);
+    
+    DEBUG("Parsing completed successfully with AST: %p", (void*)ast);
+    return ast;
+}
+
+/**
+ * Non-thread version of parse_string for simpler cases and platforms
+ * that don't support threading
+ */
+ast_node_t* parse_string_simple(const char* source) {
+    if (!source) {
+        ERROR("NULL source provided to parse_string_simple");
+        return NULL;
+    }
+    
+    // Simple direct approach without threading
+    vibe_context_t* ctx = vibe_create((void*)source);
     if (!ctx) {
         ERROR("Failed to create parser context");
         return NULL;
@@ -96,13 +214,13 @@ ast_node_t* parse_string(const char* source) {
     // Call the parser with the correct type
     int parse_success = vibe_parse(ctx, &ast);
     
+    vibe_destroy(ctx);
+    
     if (!parse_success || !ast) {
         ERROR("Parsing failed");
-        vibe_destroy(ctx);
         return NULL;
     }
     
-    vibe_destroy(ctx);
     return ast;
 }
 

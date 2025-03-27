@@ -37,3 +37,12 @@ target_link_libraries(test_codegen
     vibelang_utils
 )
 add_test(NAME test_codegen COMMAND test_codegen)
+
+add_executable(test_parser_utils
+    unit/test_parser_utils.c
+)
+target_link_libraries(test_parser_utils
+    vibelang_compiler
+    vibelang_utils
+)
+add_test(NAME test_parser_utils COMMAND test_parser_utils)

@@ -50,7 +50,7 @@ int load_config_from_file(const char* filename) {
     
     // Check if config file exists
     if (!file_exists(filename)) {
-        WARNING("Config file '%s' not found, using defaults", filename);
+        WARN("Config file '%s' not found, using defaults", filename);
         return 0;
     }
     

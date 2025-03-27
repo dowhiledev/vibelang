@@ -79,6 +79,27 @@ add_library(vibelang_compiler STATIC ${COMPILER_SOURCES})
 add_library(vibelang_runtime STATIC ${RUNTIME_SOURCES})
 add_library(vibelang_utils STATIC ${UTILS_SOURCES})
 
+# Add compile flag to limit recursion depth in the parser
+target_compile_definitions(vibelang_compiler PRIVATE 
+    PCC_STACK_MAX_SIZE=1000 
+    PCC_MAX_REPETITION=1000
+)
+
+# Set up parser debugging
+target_compile_definitions(vibelang_compiler PRIVATE 
+    PCC_DEBUG_ENABLED=1
+)
+
+# Add pthread for timeout handling on Unix systems
+if(UNIX AND NOT APPLE)
+    set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+    set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+    find_package(Threads REQUIRED)
+    target_link_libraries(vibelang_utils PRIVATE Threads::Threads)
+elseif(APPLE)
+    target_link_libraries(vibelang_utils PRIVATE "-pthread")
+endif()
+
 target_link_libraries(vibelang_runtime 
     ${CURL_LIBRARIES}
     ${CJSON_LIBRARIES}
