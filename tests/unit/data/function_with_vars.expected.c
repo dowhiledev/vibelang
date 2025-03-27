@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <vibelang.h>
-#include <vibelang/runtime.h>
+#include "vibelang.h"
+#include "runtime.h"
 
 // Forward declarations for runtime functions
 extern VibeValue* vibe_execute_prompt(const char* prompt);

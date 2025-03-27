@@ -1,3 +1,13 @@
+/**
+ * VibeLang Runtime API
+ * 
+ * This header defines the runtime interface for integrating with LLMs
+ * and executing prompts from C applications.
+ *
+ * @file runtime.h
+ * @version 0.1.0
+ */
+
 #ifndef VIBELANG_RUNTIME_H
 #define VIBELANG_RUNTIME_H
 
