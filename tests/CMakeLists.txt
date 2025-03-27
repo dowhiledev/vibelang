@@ -1,5 +1,8 @@
 # Unit Tests for VibeLang
 
+# Create the test data directory
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit/data)
+
 add_executable(test_ast
     unit/test_ast.c
 )
@@ -25,3 +28,12 @@ target_link_libraries(test_semantic
     vibelang_utils
 )
 add_test(NAME test_semantic COMMAND test_semantic)
+
+add_executable(test_codegen
+    unit/test_codegen.c
+)
+target_link_libraries(test_codegen
+    vibelang_compiler
+    vibelang_utils
+)
+add_test(NAME test_codegen COMMAND test_codegen)

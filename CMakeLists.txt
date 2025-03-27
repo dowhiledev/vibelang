@@ -41,6 +41,7 @@ add_custom_command(
 set(COMPILER_SOURCES
     src/compiler/lexer.c
     src/compiler/parser.c
+    src/compiler/parser_utils.c
     src/compiler/ast.c
     src/compiler/semantic.c
     src/compiler/codegen.c
