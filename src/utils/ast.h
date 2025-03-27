@@ -91,4 +91,9 @@ double ast_get_float(const ast_node_t* node, const char* key);
 const char* ast_get_string(const ast_node_t* node, const char* key);
 int ast_get_bool(const ast_node_t* node, const char* key);
 
+/* AST Debug Functions */
+void ast_print(const ast_node_t* node, int depth);  // Add this declaration
+size_t ast_child_count(const ast_node_t* node);     // Utility function
+ast_node_t* ast_child_get(const ast_node_t* node, size_t index);  // Utility function
+
 #endif /* VIBELANG_AST_H */

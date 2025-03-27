@@ -1,0 +1,132 @@
+/* A simple parser implementation for VibeLang */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include "parser.h"
+#include "../utils/ast.h"
+#include "../utils/log_utils.h"
+
+/* Private context structure */
+struct vibe_context_tag {
+    const char *input;
+    size_t position;
+    size_t line;
+    size_t column;
+    char error_msg[256];
+};
+
+/* Create a parser context */
+vibe_context_t *vibe_create(const char *input) {
+    if (!input) return NULL;
+    
+    vibe_context_t *ctx = malloc(sizeof(vibe_context_t));
+    if (!ctx) return NULL;
+    
+    ctx->input = input;
+    ctx->position = 0;
+    ctx->line = 1;
+    ctx->column = 1;
+    ctx->error_msg[0] = '\0';
+    
+    return ctx;
+}
+
+/* Get error message */
+const char *vibe_get_error(vibe_context_t *ctx) {
+    return ctx->error_msg;
+}
+
+/* Destroy parser context */
+void vibe_destroy(vibe_context_t *ctx) {
+    free(ctx);
+}
+
+/* Skip whitespace and comments */
+static void skip_whitespace(vibe_context_t *ctx) {
+    int in_comment = 0;
+    
+    while (ctx->input[ctx->position]) {
+        char c = ctx->input[ctx->position];
+        
+        if (in_comment) {
+            if (c == '\n') {
+                in_comment = 0;
+            }
+            ctx->position++;
+            if (c == '\n') {
+                ctx->line++;
+                ctx->column = 1;
+            } else {
+                ctx->column++;
+            }
+            continue;
+        }
+        
+        if (c == '/' && ctx->input[ctx->position + 1] == '/') {
+            in_comment = 1;
+            ctx->position += 2;
+            ctx->column += 2;
+            continue;
+        }
+        
+        if (isspace(c)) {
+            ctx->position++;
+            if (c == '\n') {
+                ctx->line++;
+                ctx->column = 1;
+            } else {
+                ctx->column++;
+            }
+            continue;
+        }
+        
+        break;
+    }
+}
+
+/* Simple function implementation for demonstration */
+int vibe_parse(vibe_context_t *ctx, ast_node_t **ret) {
+    if (!ctx || !ret) return 0;
+    
+    // Create a program node
+    *ret = create_ast_node(AST_PROGRAM);
+    
+    // Skip initial whitespace
+    skip_whitespace(ctx);
+    
+    // Handle empty input
+    if (!ctx->input[ctx->position]) {
+        return 1; // Empty program is valid
+    }
+    
+    // For now, create a placeholder function for demonstration
+    ast_node_t* func = create_ast_node(AST_FUNCTION_DECL);
+    ast_set_string(func, "name", "main");
+    
+    // Add function body
+    ast_node_t* body = create_ast_node(AST_FUNCTION_BODY);
+    ast_add_child(func, body);
+    
+    // Add body to function
+    ast_add_child(*ret, func);
+    
+    // For debugging/demo purposes, add a simple expression statement
+    ast_node_t* expr = create_ast_node(AST_EXPR_STMT);
+    ast_node_t* call = create_ast_node(AST_CALL_EXPR);
+    ast_set_string(call, "function", "print");
+    
+    ast_node_t* arg = create_ast_node(AST_STRING_LITERAL);
+    ast_set_string(arg, "value", "Hello, VibeLang!");
+    
+    ast_add_child(call, arg);
+    ast_add_child(expr, call);
+    ast_add_child(body, expr);
+    
+    // Add prompt block
+    ast_node_t* prompt = create_ast_node(AST_PROMPT_BLOCK);
+    ast_set_string(prompt, "template", "Tell me something interesting");
+    ast_add_child(body, prompt);
+    
+    return 1; // Success
+}

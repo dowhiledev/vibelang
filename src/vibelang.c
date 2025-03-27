@@ -9,7 +9,7 @@ extern VibeError vibelang_init();
 extern void vibelang_shutdown();
 extern VibeModule* vibelang_load(const char* filename);
 extern void vibelang_unload(VibeModule* module);
-extern VibeValue* vibe_call_raw(VibeModule* module, const char* function_name, ...);
+// Remove or comment out this line: extern VibeValue* vibe_call_raw(VibeModule* module, const char* function_name, ...);
 extern const char* vibe_get_error_message();
 
 /* Initialize library */
@@ -25,7 +25,8 @@ static void cleanup() {
     INFO("VibeLang library unloaded");
 }
 
-/* Proxy functions for the public API */
+/* Proxy functions for the public API - use the version from runtime.c */
+/*
 VibeValue* vibe_call_with_args(VibeModule* module, const char* function_name, 
                              VibeValue** args, size_t arg_count) {
     if (!module || !function_name) {
@@ -39,13 +40,16 @@ VibeValue* vibe_call_with_args(VibeModule* module, const char* function_name,
     // This is a placeholder that will be completed in the next phase
     return vibe_value_null();
 }
+*/
 
-/* Variadic wrapper for vibe_call_with_args */
+/* Variadic wrapper for vibe_call_with_args - remove or comment out to avoid duplication */
+/*
 VibeValue* vibe_call(VibeModule* module, const char* function_name, ...) {
     // TODO: Implement variadic argument handling
     // For now, just call without arguments
     return vibe_call_with_args(module, function_name, NULL, 0);
 }
+*/
 
 /* 
  * Note: All other API functions (vibelang_init, vibelang_shutdown, etc.)

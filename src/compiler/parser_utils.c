@@ -18,6 +18,7 @@ ast_node_t* parse_string(const char* source) {
         return NULL;
     }
     
+    // No need to cast, since we updated the header to accept const char*
     vibe_context_t* ctx = vibe_create(source);
     if (!ctx) {
         ERROR("Failed to create parser context");
