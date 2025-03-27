@@ -1,7 +1,8 @@
 %prefix "vibe"
-
+%value "ast_node_t*"
 %header {
 #include "../utils/ast.h"
+#include "parser_utils.h"
 #define YY_CTX_LOCAL 1
 }
 
@@ -18,8 +19,10 @@ Program <- Spacing decl:Declarations EOF { $$ = decl; }
 Declarations <- first:Declaration rest:DeclarationRest* {
     ast_node_t* program = create_ast_node(AST_PROGRAM);
     if (first) ast_add_child(program, first);
-    for (int i = 0; i < rest.len; i++) {
-        ast_node_t* decl = rest.list[i];
+    
+    // Process rest items individually rather than as a list structure
+    for (int i = 0; i < pcc_array_length(rest); i++) {
+        ast_node_t* decl = pcc_array_get(rest, i);
         if (decl) ast_add_child(program, decl);
     }
     $$ = program;
@@ -34,7 +37,7 @@ Declaration <- FunctionDeclaration / TypeDeclaration / ClassDeclaration / Import
 FunctionDeclaration <- 
     "fn" Spacing name:Identifier Spacing "(" Spacing params:ParameterList? Spacing ")" Spacing ret:ReturnType? Spacing body:Block {
     ast_node_t* func = create_ast_node(AST_FUNCTION_DECL);
-    ast_set_string(func, "name", name);
+    ast_set_string(func, "name", extract_string_value(name));
     if (params) ast_add_child(func, params);
     if (ret) ast_add_child(func, ret);
     if (body) {
@@ -54,8 +57,10 @@ ReturnType <- "->" Spacing t:Type { $$ = t; }
 ParameterList <- first:Parameter rest:ParameterRest* {
     ast_node_t* params = create_ast_node(AST_PARAM_LIST);
     ast_add_child(params, first);
-    for (int i = 0; i < rest.len; i++) {
-        ast_node_t* param = rest.list[i];
+    
+    // Process rest items individually
+    for (int i = 0; i < pcc_array_length(rest); i++) {
+        ast_node_t* param = pcc_array_get(rest, i);
         ast_add_child(params, param);
     }
     $$ = params;
@@ -66,7 +71,7 @@ ParameterRest <- Spacing "," Spacing p:Parameter { $$ = p; }
 # Individual parameter
 Parameter <- name:Identifier Spacing ":" Spacing t:Type {
     ast_node_t* param = create_ast_node(AST_PARAMETER);
-    ast_set_string(param, "name", name);
+    ast_set_string(param, "name", extract_string_value(name));
     ast_add_child(param, t);
     $$ = param;
 }
@@ -75,7 +80,7 @@ Parameter <- name:Identifier Spacing ":" Spacing t:Type {
 TypeDeclaration <- 
     "type" Spacing name:Identifier Spacing "=" Spacing t:Type Spacing ";" {
     ast_node_t* type_decl = create_ast_node(AST_TYPE_DECL);
-    ast_set_string(type_decl, "name", name);
+    ast_set_string(type_decl, "name", extract_string_value(name));
     ast_add_child(type_decl, t);
     $$ = type_decl;
 }
@@ -86,7 +91,7 @@ Type <- MeaningType / BasicType
 # Basic type
 BasicType <- name:Identifier {
     ast_node_t* type = create_ast_node(AST_BASIC_TYPE);
-    ast_set_string(type, "type", name);
+    ast_set_string(type, "type", extract_string_value(name));
     $$ = type;
 }
 
@@ -94,7 +99,7 @@ BasicType <- name:Identifier {
 MeaningType <- 
     "Meaning" Spacing "<" Spacing base:Type Spacing ">" Spacing "(" Spacing meaning:StringLiteral Spacing ")" {
     ast_node_t* type = create_ast_node(AST_MEANING_TYPE);
-    ast_set_string(type, "meaning", meaning);
+    ast_set_string(type, "meaning", extract_string_value(meaning));
     ast_add_child(type, base);
     $$ = type;
 }
@@ -103,9 +108,11 @@ MeaningType <-
 ClassDeclaration <- 
     "class" Spacing name:Identifier Spacing "{" Spacing members:ClassMember* Spacing "}" {
     ast_node_t* class = create_ast_node(AST_CLASS_DECL);
-    ast_set_string(class, "name", name);
-    for (int i = 0; i < members.len; i++) {
-        ast_node_t* member = members.list[i];
+    ast_set_string(class, "name", extract_string_value(name));
+    
+    // Process members individually
+    for (int i = 0; i < pcc_array_length(members); i++) {
+        ast_node_t* member = pcc_array_get(members, i);
         ast_add_child(class, member);
     }
     $$ = class;
@@ -118,7 +125,7 @@ ClassMember <- MemberVariable / FunctionDeclaration
 MemberVariable <- 
     name:Identifier Spacing ":" Spacing t:Type Spacing ";" {
     ast_node_t* var = create_ast_node(AST_MEMBER_VAR);
-    ast_set_string(var, "name", name);
+    ast_set_string(var, "name", extract_string_value(name));
     ast_add_child(var, t);
     $$ = var;
 }
@@ -127,15 +134,17 @@ MemberVariable <-
 ImportDeclaration <- 
     "import" Spacing path:StringLiteral Spacing ";" {
     ast_node_t* import = create_ast_node(AST_IMPORT);
-    ast_set_string(import, "path", path);
+    ast_set_string(import, "path", extract_string_value(path));
     $$ = import;
 }
 
 # Block of code with statements
 Block <- "{" Spacing stmts:Statement* Spacing "}" {
     ast_node_t* block = create_ast_node(AST_BLOCK);
-    for (int i = 0; i < stmts.len; i++) {
-        ast_node_t* stmt = stmts.list[i];
+    
+    // Process statements individually
+    for (int i = 0; i < pcc_array_length(stmts); i++) {
+        ast_node_t* stmt = pcc_array_get(stmts, i);
         if (stmt) ast_add_child(block, stmt);
     }
     $$ = block;
@@ -153,7 +162,7 @@ Statement <-
 VariableDeclaration <- 
     "let" Spacing name:Identifier Spacing type_annot:TypeAnnotation? Spacing "=" Spacing expr:Expression Spacing ";" {
     ast_node_t* var = create_ast_node(AST_VAR_DECL);
-    ast_set_string(var, "name", name);
+    ast_set_string(var, "name", extract_string_value(name));
     if (type_annot) ast_add_child(var, type_annot);
     ast_add_child(var, expr);
     $$ = var;
@@ -174,7 +183,7 @@ ReturnStatement <-
 PromptStatement <- 
     "prompt" Spacing template:StringLiteral Spacing ";" {
     ast_node_t* prompt = create_ast_node(AST_PROMPT_BLOCK);
-    ast_set_string(prompt, "template", template);
+    ast_set_string(prompt, "template", extract_string_value(template));
     $$ = prompt;
 }
 
@@ -192,7 +201,7 @@ Expression <- CallExpression / Literal / Identifier
 CallExpression <- 
     func:Identifier Spacing "(" Spacing args:ArgumentList? Spacing ")" {
     ast_node_t* call = create_ast_node(AST_CALL_EXPR);
-    ast_set_string(call, "function", func);
+    ast_set_string(call, "function", extract_string_value(func));
     if (args) {
         for (int i = 0; i < args->child_count; i++) {
             ast_add_child(call, args->children[i]);
@@ -203,10 +212,12 @@ CallExpression <-
 
 # Function call argument list
 ArgumentList <- first:Expression rest:ArgumentRest* {
-    ast_node_t* args = create_ast_node(AST_ARG_LIST);
+    ast_node_t* args = create_ast_node(AST_PARAM_LIST); // Changed from AST_ARG_LIST to AST_PARAM_LIST
     ast_add_child(args, first);
-    for (int i = 0; i < rest.len; i++) {
-        ast_node_t* arg = rest.list[i];
+    
+    // Process rest items individually
+    for (int i = 0; i < pcc_array_length(rest); i++) {
+        ast_node_t* arg = pcc_array_get(rest, i);
         ast_add_child(args, arg);
     }
     $$ = args;
@@ -215,9 +226,10 @@ ArgumentList <- first:Expression rest:ArgumentRest* {
 ArgumentRest <- Spacing "," Spacing e:Expression { $$ = e; }
 
 # Literal values
-StringLiteral <- '"' content:Char* '"' {
-    /* PackCC automatically provides 'content' and 'content_end' pointers */
-    char *str = strndup(content, content_end - content);
+StringLiteral <- '"' < (!'"' .)* > '"' {
+    /* Use pcc_yytext and pcc_yylen which are defined in parser_utils.h */
+    /* text(auxil) gets the whole string with quotes, so we skip the first quote and use length minus 2 */
+    char *str = strndup(pcc_yytext + 1, pcc_yylen);
     ast_node_t *node = create_ast_node(AST_STRING_LITERAL);
     ast_set_string(node, "value", str);
     free(str);
