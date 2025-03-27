@@ -61,7 +61,7 @@ static void generate_standard_headers(FILE* out) {
     fprintf(out, "#include <stdlib.h>\n");
     fprintf(out, "#include <string.h>\n");
     fprintf(out, "#include \"vibelang.h\"\n");
-    fprintf(out, "#include \"vibelang/runtime.h\"\n\n");
+    fprintf(out, "#include \"runtime.h\"\n\n");
     
     // Add runtime function declarations if they'll be used
     fprintf(out, "// Forward declarations for runtime functions\n");
