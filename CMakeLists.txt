@@ -5,6 +5,19 @@ project(vibelang VERSION 0.1.0 LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+# macOS specific settings for SDK path and deployment target
+if(APPLE)
+    execute_process(
+        COMMAND xcrun --show-sdk-path
+        OUTPUT_VARIABLE MACOS_SDK_PATH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    # Remove any leading/trailing whitespace that might cause issues
+    string(STRIP "${MACOS_SDK_PATH}" MACOS_SDK_PATH)
+    set(CMAKE_OSX_SYSROOT "${MACOS_SDK_PATH}")
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum macOS deployment version")
+endif()
+
 # Find required packages
 find_package(CURL REQUIRED)
 find_package(cJSON REQUIRED)
@@ -14,20 +27,21 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CURL_INCLUDE_DIRS})
 include_directories(${CJSON_INCLUDE_DIRS})
 
-# Add PackCC as an external dependency
+# Add PackCC as an external dependency, with direct compiler command
 include(ExternalProject)
 ExternalProject_Add(
     packcc
     GIT_REPOSITORY https://github.com/arithy/packcc.git
-    GIT_TAG master
+    GIT_TAG main
     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/packcc
     CONFIGURE_COMMAND ""
-    BUILD_COMMAND make
-    BUILD_IN_SOURCE 1
+    BUILD_COMMAND ${CMAKE_C_COMPILER} -isysroot "${MACOS_SDK_PATH}" -o <BINARY_DIR>/packcc <SOURCE_DIR>/src/packcc.c
+    BUILD_IN_SOURCE 0
     INSTALL_COMMAND ""
+    BUILD_BYPRODUCTS <BINARY_DIR>/packcc
 )
-ExternalProject_Get_Property(packcc source_dir)
-set(PACKCC_EXECUTABLE ${source_dir}/packcc)
+ExternalProject_Get_Property(packcc BINARY_DIR)
+set(PACKCC_EXECUTABLE ${BINARY_DIR}/packcc)
 
 # Generate parser from grammar
 add_custom_command(
@@ -42,7 +56,6 @@ set(COMPILER_SOURCES
     src/compiler/lexer.c
     src/compiler/parser.c
     src/compiler/parser_utils.c
-    src/compiler/ast.c
     src/compiler/semantic.c
     src/compiler/codegen.c
     src/compiler/symbol_table.c

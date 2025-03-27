@@ -12,223 +12,264 @@
     #include "../utils/log_utils.h"
 }
 
-%value "ast_node_t*"
+%auxil "const char *"
+%value "ast_node_t *"
 
-Program <- Spacing Declaration* EOF {
+Program <- Spacing Declarations EOF {
     $$ = create_ast_node(AST_PROGRAM);
-    for (int i = 0; i < $2.len; i++) {
-        ast_add_child($$, $2.list[i]);
+    for (int i = 0; i < $1; i++) {
+        ast_add_child($$, $1[i]);
     }
 }
 
-Declaration <- ImportDecl / TypeDecl / FunctionDecl / ClassDecl
+Declarations <- Declaration* {
+    // Pass through the declaration nodes
+}
 
-ImportDecl <- "import" Spacing StringLiteral Spacing ";" Spacing {
+Declaration <- TypeDeclaration / FunctionDeclaration / ClassDeclaration / ImportDeclaration {
+    $$ = $0;
+}
+
+ImportDeclaration <- "import" Spacing StringLiteral Spacing ";" Spacing {
     $$ = create_ast_node(AST_IMPORT);
-    ast_set_string($$, "path", $3->str_val);
-    ast_node_free($3);
+    ast_set_string($$, "path", ast_get_string($2, "value"));
+    ast_node_free($2);
 }
 
-TypeDecl <- "type" Spacing Identifier Spacing "=" Spacing TypeExpression Spacing ";" Spacing {
+TypeDeclaration <- "type" Spacing Identifier Spacing "=" Spacing TypeExpression Spacing ";" Spacing {
     $$ = create_ast_node(AST_TYPE_DECL);
-    ast_set_string($$, "name", $3->str_val);
-    ast_add_child($$, $7);
-    ast_node_free($3);
+    ast_set_string($$, "name", ast_get_string($2, "name"));
+    ast_add_child($$, $6);
+    ast_node_free($2);
 }
 
-TypeExpression <- MeaningType / BasicType
+TypeExpression <- MeaningType / BasicType {
+    $$ = $0;
+}
 
-MeaningType <- "Meaning" Spacing "<" Spacing BasicType Spacing ">" Spacing "(" Spacing StringLiteral Spacing ")" {
+MeaningType <- "Meaning" Spacing "<" Spacing BasicType Spacing ">" Spacing "(" Spacing StringLiteral Spacing ")" Spacing {
     $$ = create_ast_node(AST_MEANING_TYPE);
-    ast_add_child($$, $5);
-    ast_set_string($$, "meaning", $11->str_val);
-    ast_node_free($11);
+    ast_add_child($$, $4);
+    ast_set_string($$, "meaning", ast_get_string($10, "value"));
+    ast_node_free($10);
 }
 
-BasicType <- "Int" / "Float" / "String" / "Bool" / Identifier {
+BasicType <- ("Int" / "Float" / "String" / "Bool" / Identifier) Spacing {
     $$ = create_ast_node(AST_BASIC_TYPE);
-    ast_set_string($$, "type", $0.text);
+    // Strip trailing whitespace from type name
+    char* type = strdup(yytext);
+    char* end = type + strlen(type) - 1;
+    while (end > type && (*end == ' ' || *end == '\t' || *end == '\n' || *end == '\r')) {
+        *end-- = '\0';
+    }
+    ast_set_string($$, "type", type);
+    free(type);
 }
 
-FunctionDecl <- "fn" Spacing Identifier Spacing "(" Spacing ParamList? Spacing ")" Spacing
-                ("->" Spacing TypeExpression Spacing)? FunctionBody Spacing {
+FunctionDeclaration <- "fn" Spacing Identifier Spacing "(" Spacing ParameterList? Spacing ")" Spacing ReturnType? Block {
     $$ = create_ast_node(AST_FUNCTION_DECL);
-    ast_set_string($$, "name", $3->str_val);
-    ast_node_free($3);
+    ast_set_string($$, "name", ast_get_string($2, "name"));
+    ast_node_free($2);
     
-    if ($7.len > 0) {
-        ast_node_t *params = create_ast_node(AST_PARAM_LIST);
-        for (int i = 0; i < $7.len; i++) {
-            ast_add_child(params, $7.list[i]);
-        }
-        ast_add_child($$, params);
+    if ($6 != NULL) { // Parameters
+        ast_add_child($$, $6);
     }
-    
-    if ($13 != NULL) {
-        ast_add_child($$, $13);
+    if ($10 != NULL) { // Return type
+        ast_add_child($$, $10);
     }
-    
-    ast_add_child($$, $15);
+    ast_add_child($$, $11); // Body
 }
 
-ParamList <- Parameter ("," Spacing Parameter)* {
-    $$.list = malloc(sizeof(ast_node_t*) * (1 + $2.len));
-    $$.list[0] = $1;
-    $$.len = 1;
+ReturnType <- "->" Spacing TypeExpression Spacing {
+    $$ = $2;
+}
+
+ParameterList <- Parameter ("," Spacing Parameter)* {
+    $$ = create_ast_node(AST_PARAM_LIST);
+    ast_add_child($$, $0);
     
-    for (int i = 0; i < $2.len; i++) {
-        $$.list[$$.len++] = $2.list[i];
+    for (int i = 0; i < $1; i += 3) {
+        ast_add_child($$, $1[i+2]);
     }
 }
 
 Parameter <- Identifier Spacing ":" Spacing TypeExpression {
     $$ = create_ast_node(AST_PARAMETER);
-    ast_set_string($$, "name", $1->str_val);
-    ast_add_child($$, $5);
-    ast_node_free($1);
+    ast_set_string($$, "name", ast_get_string($0, "name"));
+    ast_add_child($$, $4);
+    ast_node_free($0);
 }
 
-FunctionBody <- "{" Spacing Statement* PromptBlock? Spacing "}" {
+ClassDeclaration <- "class" Spacing Identifier Spacing "{" Spacing ClassMembers Spacing "}" Spacing {
+    $$ = create_ast_node(AST_CLASS_DECL);
+    ast_set_string($$, "name", ast_get_string($2, "name"));
+    
+    // Add class members
+    for (int i = 0; i < $6; i++) {
+        ast_add_child($$, $6[i]);
+    }
+    
+    ast_node_free($2);
+}
+
+ClassMembers <- (ClassMember Spacing)* {
+    // Pass through class member nodes
+}
+
+ClassMember <- MemberVariable / FunctionDeclaration {
+    $$ = $0;
+}
+
+MemberVariable <- Identifier Spacing ":" Spacing TypeExpression Spacing ";" Spacing {
+    $$ = create_ast_node(AST_MEMBER_VAR);
+    ast_set_string($$, "name", ast_get_string($0, "name"));
+    ast_add_child($$, $4);
+    ast_node_free($0);
+}
+
+Block <- "{" Spacing Statements Spacing "}" Spacing {
     $$ = create_ast_node(AST_FUNCTION_BODY);
     
-    for (int i = 0; i < $3.len; i++) {
-        ast_add_child($$, $3.list[i]);
-    }
-    
-    if ($4 != NULL) {
-        ast_add_child($$, $4);
+    // Add all statements
+    for (int i = 0; i < $2; i++) {
+        ast_add_child($$, $2[i]);
     }
 }
 
-PromptBlock <- "prompt" Spacing StringLiteral Spacing {
-    $$ = create_ast_node(AST_PROMPT_BLOCK);
-    ast_set_string($$, "template", $3->str_val);
-    ast_node_free($3);
+Statements <- Statement* {
+    // Pass through statement nodes
 }
 
-ClassDecl <- "class" Spacing Identifier Spacing "{" Spacing (ClassMember Spacing)* "}" Spacing {
-    $$ = create_ast_node(AST_CLASS_DECL);
-    ast_set_string($$, "name", $3->str_val);
-    ast_node_free($3);
-    
-    for (int i = 0; i < $7.len; i++) {
-        ast_add_child($$, $7.list[i]);
-    }
+Statement <- VarDeclaration / ReturnStatement / ExprStatement / PromptBlock / Block {
+    $$ = $0;
 }
 
-ClassMember <- MemberVar / MethodDecl
-
-MemberVar <- Identifier Spacing ":" Spacing TypeExpression Spacing ";" {
-    $$ = create_ast_node(AST_MEMBER_VAR);
-    ast_set_string($$, "name", $1->str_val);
-    ast_add_child($$, $5);
-    ast_node_free($1);
-}
-
-MethodDecl <- FunctionDecl
-
-Statement <- VarDecl / ExprStmt / ReturnStmt / Block
-
-VarDecl <- "let" Spacing Identifier Spacing (":" Spacing TypeExpression Spacing)? "=" Spacing Expression Spacing ";" {
+VarDeclaration <- "let" Spacing Identifier TypeAnnotation? Spacing "=" Spacing Expression Spacing ";" Spacing {
     $$ = create_ast_node(AST_VAR_DECL);
-    ast_set_string($$, "name", $3->str_val);
-    ast_node_free($3);
+    ast_set_string($$, "name", ast_get_string($2, "name"));
     
-    if ($5 != NULL) {
-        ast_add_child($$, $7);
-    }
-    
-    ast_add_child($$, $11);
-}
-
-ExprStmt <- Expression Spacing ";" {
-    $$ = create_ast_node(AST_EXPR_STMT);
-    ast_add_child($$, $1);
-}
-
-ReturnStmt <- "return" Spacing Expression? Spacing ";" {
-    $$ = create_ast_node(AST_RETURN_STMT);
-    if ($3 != NULL) {
+    if ($3 != NULL) { // Type annotation
         ast_add_child($$, $3);
     }
+    
+    ast_add_child($$, $7); // Initialization expression
+    ast_node_free($2);
 }
 
-Block <- "{" Spacing Statement* Spacing "}" {
-    $$ = create_ast_node(AST_BLOCK);
-    for (int i = 0; i < $3.len; i++) {
-        ast_add_child($$, $3.list[i]);
+TypeAnnotation <- Spacing ":" Spacing TypeExpression {
+    $$ = $3;
+}
+
+ReturnStatement <- "return" Spacing Expression? Spacing ";" Spacing {
+    $$ = create_ast_node(AST_RETURN_STMT);
+    if ($2 != NULL) {
+        ast_add_child($$, $2);
     }
 }
 
-Expression <- LiteralExpr / CallExpr / Identifier {
-    if ($0.token == 3) { // Identifier
-        $$ = create_ast_node(AST_IDENTIFIER);
-        ast_set_string($$, "name", $0.text);
-    } else {
-        $$ = $0.node;
-    }
+ExprStatement <- Expression Spacing ";" Spacing {
+    $$ = create_ast_node(AST_EXPR_STMT);
+    ast_add_child($$, $0);
 }
 
-LiteralExpr <- IntLiteral / FloatLiteral / StringLiteral / BoolLiteral
+PromptBlock <- "prompt" Spacing StringLiteral Spacing ";" Spacing {
+    $$ = create_ast_node(AST_PROMPT_BLOCK);
+    ast_set_string($$, "template", ast_get_string($2, "value"));
+    ast_node_free($2);
+}
 
-IntLiteral <- [0-9]+ {
+Expression <- CallExpression / Literal / Identifier {
+    $$ = $0;
+}
+
+CallExpression <- Identifier Spacing "(" Spacing Arguments? Spacing ")" Spacing {
+    $$ = create_ast_node(AST_CALL_EXPR);
+    ast_set_string($$, "function", ast_get_string($0, "name"));
+    
+    // Add arguments
+    if ($4 != NULL) {
+        for (int i = 0; i < $4; i++) {
+            ast_add_child($$, $4[i]);
+        }
+    }
+    
+    ast_node_free($0);
+}
+
+Arguments <- Expression ("," Spacing Expression)* {
+    // Return expressions as array
+}
+
+Literal <- IntLiteral / FloatLiteral / StringLiteral / BoolLiteral {
+    $$ = $0;
+}
+
+IntLiteral <- [0-9]+ Spacing {
     $$ = create_ast_node(AST_INT_LITERAL);
-    ast_set_int($$, "value", atoll($0.text));
+    // Convert text to integer, stripping trailing whitespace
+    char* num = strdup(yytext);
+    char* end = num + strlen(num) - 1;
+    while (end > num && (*end == ' ' || *end == '\t' || *end == '\n' || *end == '\r')) {
+        *end-- = '\0';
+    }
+    ast_set_int($$, "value", atoll(num));
+    free(num);
 }
 
-FloatLiteral <- [0-9]+ "." [0-9]+ {
+FloatLiteral <- [0-9]+ "." [0-9]+ Spacing {
     $$ = create_ast_node(AST_FLOAT_LITERAL);
-    ast_set_float($$, "value", atof($0.text));
+    // Convert text to float, stripping trailing whitespace
+    char* num = strdup(yytext);
+    char* end = num + strlen(num) - 1;
+    while (end > num && (*end == ' ' || *end == '\t' || *end == '\n' || *end == '\r')) {
+        *end-- = '\0';
+    }
+    ast_set_float($$, "value", atof(num));
+    free(num);
 }
 
-StringLiteral <- '"' (!'"' .)* '"' {
+StringLiteral <- '"' (!'"' .)* '"' Spacing {
     $$ = create_ast_node(AST_STRING_LITERAL);
     
     // Extract string without quotes
-    size_t len = $0.len - 2;
+    size_t len = yyleng - 2;
+    while (len > 0 && (yytext[len+1] == ' ' || yytext[len+1] == '\t' || 
+           yytext[len+1] == '\n' || yytext[len+1] == '\r')) {
+        len--;
+    }
+    
     char* str = malloc(len + 1);
-    memcpy(str, $0.text + 1, len);
+    memcpy(str, yytext + 1, len);
     str[len] = '\0';
     
     ast_set_string($$, "value", str);
     free(str);
 }
 
-BoolLiteral <- "true" / "false" {
+BoolLiteral <- ("true" / "false") Spacing {
     $$ = create_ast_node(AST_BOOL_LITERAL);
-    ast_set_bool($$, "value", strcmp($0.text, "true") == 0);
-}
-
-CallExpr <- Identifier Spacing "(" Spacing ArgList? Spacing ")" {
-    $$ = create_ast_node(AST_CALL_EXPR);
-    ast_set_string($$, "function", $1->str_val);
-    ast_node_free($1);
-    
-    if ($5.len > 0) {
-        for (int i = 0; i < $5.len; i++) {
-            ast_add_child($$, $5.list[i]);
-        }
-        free($5.list);
+    // Strip trailing whitespace
+    char* value = strdup(yytext);
+    char* end = value + strlen(value) - 1;
+    while (end > value && (*end == ' ' || *end == '\t' || *end == '\n' || *end == '\r')) {
+        *end-- = '\0';
     }
+    ast_set_bool($$, "value", strcmp(value, "true") == 0);
+    free(value);
 }
 
-ArgList <- Expression ("," Spacing Expression)* {
-    $$.list = malloc(sizeof(ast_node_t*) * (1 + $2.len));
-    $$.list[0] = $1;
-    $$.len = 1;
-    
-    for (int i = 0; i < $2.len; i++) {
-        $$.list[$$.len++] = $2.list[i];
-    }
-}
-
-Identifier <- [a-zA-Z_] [a-zA-Z0-9_]* {
+Identifier <- [a-zA-Z_][a-zA-Z0-9_]* Spacing {
     $$ = create_ast_node(AST_IDENTIFIER);
-    ast_set_string($$, "value", $0.text);
+    // Strip trailing whitespace from identifier
+    char* name = strdup(yytext);
+    char* end = name + strlen(name) - 1;
+    while (end > name && (*end == ' ' || *end == '\t' || *end == '\n' || *end == '\r')) {
+        *end-- = '\0';
+    }
+    ast_set_string($$, "name", name);
+    free(name);
 }
 
 Spacing <- ([ \t\r\n] / Comment)*
-
-Comment <- "//" (![\r\n] .)* [\r\n]
-
+Comment <- "//" (![\r\n] .)* [\r\n]?
 EOF <- !.

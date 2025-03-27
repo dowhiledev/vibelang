@@ -17,8 +17,8 @@ typedef struct {
     size_t size;
 } response_t;
 
-/* CURL callback for receiving data */
-static size_t curl_write_callback(char* ptr, size_t size, size_t nmemb, void* userdata) {
+/* CURL callback for receiving data - renamed to avoid conflict with curl.h */
+static size_t vibe_curl_write_callback(char* ptr, size_t size, size_t nmemb, void* userdata) {
     size_t real_size = size * nmemb;
     response_t* resp = (response_t*)userdata;
     
@@ -140,7 +140,7 @@ static char* send_openai_prompt(const char* prompt, cJSON* params) {
     }
     response.data[0] = '\0';
     
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, vibe_curl_write_callback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
     
     // Perform request
