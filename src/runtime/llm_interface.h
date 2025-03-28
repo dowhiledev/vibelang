@@ -12,7 +12,7 @@ extern "C" {
 
 /**
  * Initialize the connection to the LLM service
- * 
+ *
  * @return 1 on success, 0 on failure
  */
 int init_llm_connection(void);
@@ -24,12 +24,12 @@ void close_llm_connection(void);
 
 /**
  * Send a prompt to the LLM with a specific meaning context
- * 
+ *
  * @param prompt The text prompt to send
  * @param meaning The semantic meaning context
  * @return The response from the LLM, or NULL on error (caller must free)
  */
-char* send_llm_prompt(const char* prompt, const char* meaning);
+char *send_llm_prompt(const char *prompt, const char *meaning);
 
 #ifdef __cplusplus
 }
