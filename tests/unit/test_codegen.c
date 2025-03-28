@@ -146,7 +146,7 @@ static void test_simple_function() {
       "type Temperature = Meaning<Int>(\"temperature in Celsius\");\n"
       "\n"
       "fn getTemperature(city: String) -> Temperature {\n"
-      "    prompt \"What is the temperature in {city}?\"\n"
+      "    prompt \"What is the temperature in {city}?\";\n"
       "}\n";
 
   test_codegen("simple_function", source);
@@ -160,7 +160,7 @@ static void test_function_with_vars() {
       "fn getWeather(city: String, day: String) -> Weather {\n"
       "    let location = city;\n"
       "    let when = day;\n"
-      "    prompt \"What is the weather like in {location} on {when}?\"\n"
+      "    prompt \"What is the weather like in {location} on {when}?\";\n"
       "}\n";
 
   test_codegen("function_with_vars", source);
