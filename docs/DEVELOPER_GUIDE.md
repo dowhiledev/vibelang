@@ -57,11 +57,13 @@ VibeLang is structured as a multi-layered system:
 2. **Semantic Analysis**: AST → Validated AST
    - Symbol resolution and type checking
    - Meaning type validation
+   - Duplicate symbol detection
    - Error detection
 
 3. **Code Generation**: Validated AST → C code
    - Type mapping (VibeLang → C)
-   - Prompt block translation
+   - Prompt block translation with variable extraction
+   - Return type handling for prompt blocks
    - Runtime API calls injection
 
 4. **Compilation**: C code → Shared library
@@ -72,26 +74,74 @@ VibeLang is structured as a multi-layered system:
 
 When a prompt block is encountered:
 
-1. Variables in scope are identified
-2. Template substitution code is generated
-3. Runtime call to `vibe_execute_prompt()` is inserted
-4. Response conversions to the appropriate return type are added
+1. Variables in scope are identified (like `{name}` in the template)
+2. The code generator extracts variable names from the template
+3. Code to create variable name and value arrays is generated
+4. Template substitution code is generated using `format_prompt`
+5. Runtime call to `vibe_execute_prompt()` is inserted
+6. Response conversions to the appropriate return type are added based on the function's return type
 
-## Adding a New Feature
+### Example:
 
-### Example: Adding a new language construct
+From a VibeLang prompt block:
+```vibe
+prompt "What is the weather like in {city} on {date}?";
+```
 
-1. Update `grammar.peg` to recognize the new syntax
-2. Add corresponding AST node type in `utils/ast.h`
-3. Add semantic analysis in `compiler/semantic.c`
-4. Add code generation in `compiler/codegen.c`
-5. Add tests in `tests/unit/`
+The compiler generates:
+```c
+{
+    // Prompt block: "What is the weather like in {city} on {date}?"
+    const char* prompt_template = "What is the weather like in {city} on {date}?";
+    int var_count = 2;
+    char** var_names = malloc(sizeof(char*) * var_count);
+    char** var_values = malloc(sizeof(char*) * var_count);
+    var_names[0] = "city";
+    var_values[0] = city ? strdup(city) : strdup("");
+    var_names[1] = "date";
+    var_values[1] = date ? strdup(date) : strdup("");
+    char* formatted_prompt = format_prompt(prompt_template, var_names, var_values, var_count);
+    VibeValue* prompt_result = vibe_execute_prompt(formatted_prompt, prompt_template);
+    
+    // Free resources
+    free(formatted_prompt);
+    for (int i = 0; i < var_count; i++) {
+        free(var_values[i]);
+    }
+    free(var_names);
+    free(var_values);
+    
+    // Return the result with the appropriate type
+    return vibe_value_get_string(prompt_result);
+}
+```
 
-### Example: Adding a new LLM provider
+## Building and Packaging
 
-1. Update `runtime/config.c` to recognize the new provider
-2. Add provider-specific implementation in `runtime/llm_interface.c`
-3. Update environment variable handling in both files
+### RPATH and Dynamic Library Handling
+
+For proper runtime library resolution:
+
+- On macOS, we use `@rpath` and `@executable_path` to find libraries relative to the executable
+- The installer includes an `install_name_tool` step to update dynamic references
+- CMake is configured with proper RPATH settings
+
+```cmake
+# Add to CMakeLists.txt for proper RPATH handling
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+if(APPLE)
+  set(CMAKE_INSTALL_RPATH "@executable_path;@executable_path/../lib;${CMAKE_INSTALL_RPATH}")
+  set(CMAKE_INSTALL_NAME_DIR "@rpath")
+  set(CMAKE_BUILD_WITH_INSTALL_NAME_DIR TRUE)
+endif()
+```
+
+### Cross-Platform Compatibility
+
+- Windows: Dynamic libraries use `.dll` extension
+- macOS: Dynamic libraries use `.dylib` extension
+- Linux: Dynamic libraries use `.so` extension
 
 ## Testing
 
@@ -101,36 +151,33 @@ The project uses a comprehensive test suite:
 - **Integration Tests**: Test the full compilation pipeline
 - **Generated Code Tests**: Verify the correctness of generated C code
 
-To run tests:
+Tests are organized by component:
+- `test_ast.c`: Tests AST creation and manipulation
+- `test_parser_utils.c`: Tests parser utility functions
+- `test_semantic.c`: Tests semantic analysis
+- `test_codegen.c`: Tests code generation
+- `test_bison_parser.c`: Tests the Bison parser integration
 
+To run tests:
 ```bash
 cd build
 make test
 ```
 
-## Build System
+## Common Development Tasks
 
-The project uses CMake as its build system:
+### Adding a New Feature
 
-- CMake configuration in `CMakeLists.txt`
-- Dependencies managed through CMake's find_package
-- PackCC integration for parser generation
+1. Update the grammar in `grammar.peg`
+2. Update the AST node types in `ast.h`
+3. Add semantic analysis in `semantic.c`
+4. Add code generation in `codegen.c`
+5. Add runtime support if needed
+6. Add tests
 
-## Code Style
+### Fixing Common Issues
 
-- **C Code**: 4-space indentation, C11 standard
-- **Comments**: Function documentation in header files
-- **Naming**: Snake case for functions and variables
-
-## Common Pitfalls
-
-- **Memory Management**: Ensure proper cleanup in all code paths
-- **Error Handling**: Check return values and propagate errors
-- **Grammar Ambiguities**: Be careful when updating the grammar
-- **API Version Compatibility**: Maintain backward compatibility
-
-## References
-
-- [PackCC Documentation](https://github.com/arithy/packcc)
-- [OpenAI API Documentation](https://platform.openai.com/docs/api-reference)
-- [C11 Standard](https://en.cppreference.com/w/c/11)
+- **RPATH Issues**: On macOS, make sure to use `install_name_tool` to update library paths
+- **Symbol Resolution**: Ensure `parser_bison.h` is present for compatibility with legacy code
+- **Memory Management**: Check for proper cleanup in all code paths, especially in semantic analysis and code generation
+- **Missing Libraries**: Add required libraries to CMakeLists.txt

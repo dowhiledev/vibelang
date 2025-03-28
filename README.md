@@ -1,215 +1,102 @@
 # VibeLang
 
-VibeLang is a high-level programming language designed for seamless integration with Large Language Models (LLMs). It features semantic type annotations, built-in prompt blocks, and interoperability with C and Python.
+VibeLang is a programming language designed to seamlessly integrate with Large Language Models (LLMs) through native prompt blocks.
 
 ## Features
 
-- **Semantic Type System** - Attach meaning to your data types for better LLM understanding
-- **Built-in LLM Integration** - First-class support for LLM prompts within code using `prompt` blocks
-- **Meaning Annotations** - Allow LLMs to understand the purpose and context of variables
-- **Cross-language Compatibility** - Call VibeLang functions from C and Python
-- **Efficient Compilation** - Compiles to C for performance and portability
-
-## How It Works
-
-VibeLang compiles to C code and exposes a simple API for integration with other languages. The compiler:
-
-1. Parses VibeLang source files using a PEG-based grammar
-2. Performs semantic analysis to ensure type safety
-3. Generates C code that includes calls to the VibeLang runtime
-4. Compiles the generated code into a shared library
-5. Provides runtime LLM integration through configurable providers (e.g., OpenAI)
-
-When a `prompt` block runs, VibeLang:
-
-1. Formats the prompt template with variable values
-2. Sends the prompt to the configured LLM provider
-3. Parses the response and converts it to the appropriate return type
-4. Caches responses for efficiency (configurable)
+- **Semantic Types** - Add meaning to your data types
+- **Native LLM Integration** - Use prompt blocks directly in your code
+- **Strong Type System** - Static typing with inference
+- **C Interoperability** - Compiles to C for portability and performance
 
 ## Getting Started
 
 ### Prerequisites
 
-- C compiler (GCC or Clang)
 - CMake 3.10+
-- libcurl and cJSON libraries
-- Python 3.6+ (for Python bindings)
+- C compiler (GCC, Clang)
+- libcURL development libraries
+- (Optional) cJSON development libraries
 
-### Installing Dependencies
+### Installation
 
-#### Ubuntu/Debian
-```bash
-sudo apt-get install build-essential cmake libcurl4-openssl-dev libcjson-dev
-```
-
-#### macOS
-```bash
-brew install cmake curl cjson
-```
-
-### Building from Source
+#### Building from Source
 
 ```bash
+# Clone the repository
 git clone https://github.com/yourusername/vibelang.git
 cd vibelang
-mkdir build && cd build
+
+# Build the project
+mkdir -p build && cd build
 cmake ..
 make
+
+# Install globally (optional)
 sudo make install
 ```
 
-### Setting up the LLM provider
+For macOS users, you can also use the provided installation script:
 
-Set your API key in the environment:
 ```bash
-export OPENAI_API_KEY=your-api-key
+# From the root of the repository
+chmod +x install.sh
+./install.sh
 ```
 
-Or in `vibeconfig.json` in your project directory:
-```json
-{
-  "global": {
-    "provider": "OpenAI",
-    "api_key": "your-api-key",
-    "default_params": { 
-      "model": "gpt-4",
-      "temperature": 0.7, 
-      "max_tokens": 150 
-    }
-  }
-}
-```
+This script properly handles dynamic library paths for macOS.
 
-## Basic Example
+### Your First VibeLanguage Program
 
-### Temperature Checker
+Create a file called `greeting.vibe`:
 
 ```vibe
-type Temperature = Meaning<Int>("temperature in Celsius");
+type Greeting = Meaning<String>("greeting message");
 
-fn getTemperature(city: Meaning<String>("city name")) -> Temperature {
-    prompt "What is the temperature in {city}?"
+fn greet(name: String) -> Greeting {
+    prompt "Generate a friendly greeting for a person named {name} starting with Hello";
 }
 
 fn main() {
-    let temp = getTemperature("San Francisco");
-    print("The temperature is {temp} degrees Celsius");
+    let message = greet("World");
+    print(message);
 }
 ```
 
-### Multilingual Greeting Generator
+Compile and run:
 
-```vibe
-type Greeting = Meaning<String>("a friendly greeting");
-type Language = Meaning<String>("language name");
-
-fn generateGreeting(name: Meaning<String>("person's name"), 
-                   language: Language) -> Greeting {
-    prompt "Generate a friendly greeting for a person named {name} in {language}."
-}
-
-fn main() {
-    let languages = ["English", "Spanish", "French", "Japanese"];
-    
-    for (let i = 0; i < 4; i++) {
-        let greeting = generateGreeting("Alex", languages[i]);
-        print("{greeting}");
-    }
-}
+```bash
+vibec greeting.vibe
+gcc greeting.c -o greeting -lvibelang
+./greeting
 ```
 
-## Using in C Programs
+## LLM Configuration
 
-```c
-#include <vibelang.h>
-#include <stdio.h>
-
-int main() {
-    // Initialize the VibeLang runtime
-    vibelang_init();
-    
-    // Load a VibeLang module
-    VibeModule* weather = vibelang_load("weather.vibe");
-    
-    // Create argument
-    VibeValue* city = vibe_value_string("Tokyo");
-    
-    // Call a function
-    VibeValue* temp = vibe_call(weather, "getTemperature", city);
-    
-    // Use the result
-    printf("Temperature: %lld°C\n", vibe_value_get_int(temp));
-    
-    // Clean up
-    vibe_value_free(city);
-    vibe_value_free(temp);
-    vibelang_unload(weather);
-    vibelang_shutdown();
-    
-    return 0;
-}
-```
-
-## Configuration Options
-
-VibeLang uses a `vibeconfig.json` file for configuration:
+Configure your LLM provider by creating a `vibeconfig.json` file:
 
 ```json
 {
   "global": {
     "provider": "OpenAI",
-    "api_key": "your-api-key",
-    "default_params": { 
+    "api_key": "your-api-key-here",
+    "default_params": {
       "model": "gpt-4",
-      "temperature": 0.7, 
-      "max_tokens": 150 
-    }
-  },
-  "overrides": {
-    "getTemperature": { 
-      "temperature": 0.5,
-      "max_tokens": 100
-    },
-    "greet": { 
-      "temperature": 0.9
+      "temperature": 0.7
     }
   }
 }
 ```
 
-## Project Structure
+You can also set the `VIBE_API_KEY` environment variable instead of including it in the config file.
 
-- `include/` - Public C API headers
-- `src/` - Source code for compiler and runtime
-  - `compiler/` - Parsing, semantic analysis, and code generation
-  - `runtime/` - Module loading and LLM integration
-  - `utils/` - Utilities for AST, file handling, etc.
-- `bindings/` - Language bindings (Python)
-- `examples/` - Example VibeLang programs
-- `tests/` - Unit and integration tests
+## Documentation
 
-## Development
-
-### Running the Compiler
-
-```bash
-vibec -o output.c input.vibe  # Compile only
-vibec input.vibe              # Compile and generate shared library
-```
-
-### Debugging
-
-Use the `-v` flag for verbose output:
-
-```bash
-vibec -v input.vibe
-```
-
-## Contributing
-
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+- [Language Guide](docs/LANGUAGE_GUIDE.md) - Learn the VibeLang syntax and features
+- [API Reference](docs/API_REFERENCE.md) - Detailed API documentation
+- [Developer Guide](docs/DEVELOPER_GUIDE.md) - Contributing to VibeLang
+- [Implementation Details](docs/IMPLEMENTATION.md) - Technical details about the compiler
 
 ## License
 
-[MIT License](LICENSE)
+VibeLang is licensed under the MIT License. See [LICENSE](LICENSE) for details.
