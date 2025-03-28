@@ -1,0 +1,12 @@
+<map id="include/symbol_table.h" name="include/symbol_table.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="134,5,307,31"/>
+<area shape="rect" id="Node000002" href="$semantic_8c.html" title="Implementation of semantic analysis for the Vibe language compiler." alt="" coords="5,167,183,192"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="176,39,147,56,121,80,109,102,102,126,97,167,92,166,97,124,105,100,117,77,143,52,174,34"/>
+<area shape="rect" id="Node000003" href="$semantic_8h.html" title="Semantic analysis functions for the Vibe language compiler." alt="" coords="131,86,310,111"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="223,44,223,86,218,86,218,44"/>
+<area shape="rect" id="Node000005" href="$symbol__table_8c.html" title=" " alt="" coords="334,79,489,119"/>
+<area shape="poly" id="edge5_Node000001_Node000005" title=" " alt="" coords="262,33,367,76,364,81,260,38"/>
+<area shape="poly" id="edge3_Node000003_Node000002" title=" " alt="" coords="192,121,114,169,111,164,189,116"/>
+<area shape="rect" id="Node000004" href="$vibelang_8c.html" title=" " alt="" coords="207,167,319,192"/>
+<area shape="poly" id="edge4_Node000003_Node000004" title=" " alt="" coords="236,122,259,165,255,168,231,125"/>
+</map>

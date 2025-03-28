@@ -1,0 +1,15 @@
+<map id="src/utils/file_utils.h" name="src/utils/file_utils.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="470,5,614,31"/>
+<area shape="rect" id="Node000002" href="$codegen_8c.html" title="Code generation implementation for the Vibe language compiler." alt="" coords="5,79,177,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="457,35,164,81,164,76,456,30"/>
+<area shape="rect" id="Node000003" href="$config_8c.html" title="Configuration management for the Vibe language runtime." alt="" coords="201,79,352,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="487,37,320,81,319,76,485,32"/>
+<area shape="rect" id="Node000004" href="$runtime_8c.html" title=" " alt="" coords="377,79,539,104"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="520,42,473,80,470,76,516,38"/>
+<area shape="rect" id="Node000005" href="$vibec_8c.html" title="Vibe language compiler command line tool." alt="" coords="564,79,691,104"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="568,37,615,76,612,80,564,41"/>
+<area shape="rect" id="Node000006" href="$cache__utils_8c.html" title=" " alt="" coords="715,79,876,104"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="597,32,755,76,754,81,595,37"/>
+<area shape="rect" id="Node000007" href="$file__utils_8c.html" title=" " alt="" coords="900,79,1043,104"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="625,30,903,76,902,81,624,36"/>
+</map>

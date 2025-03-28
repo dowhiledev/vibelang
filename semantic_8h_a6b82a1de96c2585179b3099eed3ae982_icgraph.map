@@ -1,0 +1,14 @@
+<map id="analyze_semantics" name="analyze_semantics">
+<area shape="rect" id="Node000001" title=" " alt="" coords="497,55,644,80"/>
+<area shape="rect" id="Node000002" href="$semantic_8c.html#a8ec5b43d3e22c817ee7f57811cd7d0f9" title=" " alt="" coords="288,5,428,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="501,54,413,33,414,28,503,49"/>
+<area shape="rect" id="Node000003" href="$vibelang_8c.html#a5fd11fb534b81ec6331d97a6db216320" title=" " alt="" coords="267,55,449,80"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="484,70,450,70,450,65,484,65"/>
+<area shape="rect" id="Node000004" href="$vibelang_8c.html#a1a995a9ba6a5a7c60242e64d8c7e6ac8" title=" " alt="" coords="289,104,427,129"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="503,86,414,107,413,101,501,81"/>
+<area shape="rect" id="Node000005" href="$vibec_8c.html#a8d42a0de719f7340c26f7c054cb5e0a5" title=" " alt="" coords="108,79,219,104"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="275,109,219,101,219,96,276,103"/>
+<area shape="rect" id="Node000006" href="$vibec_8c.html#a0ddf1224851353fc92bfbff6f499fa97" title=" " alt="" coords="5,104,60,129"/>
+<area shape="poly" id="edge6_Node000004_Node000006" title=" " alt="" coords="275,119,60,119,60,114,275,114"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="95,107,61,114,60,109,94,102"/>
+</map>

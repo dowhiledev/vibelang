@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['vibe_5fboolean_0',['VIBE_BOOLEAN',['../struct_vibe_value.html#a8cb3884434819cbce62429429b7833a1ac45126a5fd514935e3cb467c2b887671',1,'VibeValue']]],
+  ['vibe_5ferror_5fcodegen_1',['VIBE_ERROR_CODEGEN',['../vibelang_8h.html#a455eb5c9d862c0cf98a8f75615ba85e9aff2a0d7bcb3324f270e16ba481eb7dc2',1,'vibelang.h']]],
+  ['vibe_5ferror_5fgeneral_2',['VIBE_ERROR_GENERAL',['../vibelang_8h.html#a455eb5c9d862c0cf98a8f75615ba85e9a376b2d39e1ebcb8a1cb7497eccf6c51e',1,'vibelang.h']]],
+  ['vibe_5ferror_5fio_3',['VIBE_ERROR_IO',['../vibelang_8h.html#a455eb5c9d862c0cf98a8f75615ba85e9abee388e73fef50d9bd36786e0e64a5bd',1,'vibelang.h']]],
+  ['vibe_5ferror_5fllm_5fconnection_5ffailed_4',['VIBE_ERROR_LLM_CONNECTION_FAILED',['../vibelang_8h.html#a455eb5c9d862c0cf98a8f75615ba85e9a0c7e3f8f8752981e3a4e06520994c6bb',1,'vibelang.h']]],
+  ['vibe_5ferror_5fparser_5',['VIBE_ERROR_PARSER',['../vibelang_8h.html#a455eb5c9d862c0cf98a8f75615ba85e9a80c9de7a9ab79966ba231cdadcceae29',1,'vibelang.h']]],
+  ['vibe_5ferror_5fruntime_6',['VIBE_ERROR_RUNTIME',['../vibelang_8h.html#a455eb5c9d862c0cf98a8f75615ba85e9af4fb1376667cc10513375c7368b9bcb9',1,'vibelang.h']]],
+  ['vibe_5ferror_5fsemantic_7',['VIBE_ERROR_SEMANTIC',['../vibelang_8h.html#a455eb5c9d862c0cf98a8f75615ba85e9aa99935aaeb49fee833dd43d6edbd8f3d',1,'vibelang.h']]],
+  ['vibe_5fnull_8',['VIBE_NULL',['../struct_vibe_value.html#a8cb3884434819cbce62429429b7833a1aba52788b58b4425c63b47a14aacc6f27',1,'VibeValue']]],
+  ['vibe_5fnumber_9',['VIBE_NUMBER',['../struct_vibe_value.html#a8cb3884434819cbce62429429b7833a1aaf8c688d497a9b7669bc03b9be107df2',1,'VibeValue']]],
+  ['vibe_5fobject_10',['VIBE_OBJECT',['../struct_vibe_value.html#a8cb3884434819cbce62429429b7833a1a225a11a3b34dcfe9398e0a6135528e01',1,'VibeValue']]],
+  ['vibe_5fruntime_5ferror_5ffunction_5fnot_5ffound_11',['VIBE_RUNTIME_ERROR_FUNCTION_NOT_FOUND',['../runtime_8c.html#ac8cc8bb46d6e917fb56567b504189d9ea5b0f398e954c9e1e7ed5af7add201a6b',1,'runtime.c']]],
+  ['vibe_5fruntime_5ferror_5finvalid_5fmodule_12',['VIBE_RUNTIME_ERROR_INVALID_MODULE',['../runtime_8c.html#ac8cc8bb46d6e917fb56567b504189d9eac00471d6b478fed671cdd67c894e38fc',1,'runtime.c']]],
+  ['vibe_5fruntime_5ferror_5fllm_5fconnection_5ffailed_13',['VIBE_RUNTIME_ERROR_LLM_CONNECTION_FAILED',['../runtime_8c.html#ac8cc8bb46d6e917fb56567b504189d9ea7a1f80429bfa2a091d0e79888af6cac9',1,'runtime.c']]],
+  ['vibe_5fstring_14',['VIBE_STRING',['../struct_vibe_value.html#a8cb3884434819cbce62429429b7833a1a0980e0d9959b4a2b332da553cae18710',1,'VibeValue']]],
+  ['vibe_5fsuccess_15',['VIBE_SUCCESS',['../vibelang_8h.html#a455eb5c9d862c0cf98a8f75615ba85e9aefca168f97d57056c34066576b0e8e20',1,'vibelang.h']]]
+];

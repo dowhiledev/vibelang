@@ -1,0 +1,27 @@
+<map id="src/compiler/semantic.c" name="src/compiler/semantic.c">
+<area shape="rect" id="Node000001" title="Implementation of semantic analysis for the Vibe language compiler." alt="" coords="295,5,472,31"/>
+<area shape="rect" id="Node000002" href="$semantic_8h.html" title="Semantic analysis functions for the Vibe language compiler." alt="" coords="147,79,241,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="354,33,239,76,237,71,352,28"/>
+<area shape="rect" id="Node000003" href="$symbol__table_8h.html" title=" " alt="" coords="5,152,191,177"/>
+<area shape="poly" id="edge9_Node000001_Node000003" title=" " alt="" coords="295,24,254,30,212,40,172,57,136,81,124,93,116,108,105,139,100,137,111,106,120,90,132,77,169,52,210,35,253,25,294,18"/>
+<area shape="rect" id="Node000004" href="$ast_8h.html" title=" " alt="" coords="165,225,287,251"/>
+<area shape="poly" id="edge10_Node000001_Node000004" title=" " alt="" coords="365,33,335,53,307,80,283,114,263,150,236,214,232,212,258,148,278,111,303,77,332,49,362,29"/>
+<area shape="rect" id="Node000008" href="$log__utils_8h.html" title=" " alt="" coords="317,79,450,104"/>
+<area shape="poly" id="edge11_Node000001_Node000008" title=" " alt="" coords="386,31,386,65,381,65,381,31"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="474,79,541,104"/>
+<area shape="poly" id="edge12_Node000001_Node000009" title=" " alt="" coords="405,28,477,69,474,74,402,33"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="565,79,636,104"/>
+<area shape="poly" id="edge13_Node000001_Node000010" title=" " alt="" coords="419,28,553,72,552,77,417,33"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="660,79,731,104"/>
+<area shape="poly" id="edge14_Node000001_Node000011" title=" " alt="" coords="436,28,647,76,646,81,435,33"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="180,106,126,146,123,141,177,102"/>
+<area shape="poly" id="edge8_Node000002_Node000004" title=" " alt="" coords="199,104,223,211,218,213,194,105"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="120,175,194,216,192,221,117,180"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="81,299,155,324"/>
+<area shape="poly" id="edge7_Node000003_Node000006" title=" " alt="" coords="102,177,117,285,112,285,97,178"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="183,299,266,324"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="228,251,228,285,222,285,223,251"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="210,253,149,293,146,289,207,248"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="291,299,361,324"/>
+<area shape="poly" id="edge6_Node000004_Node000007" title=" " alt="" coords="244,249,300,288,297,293,241,253"/>
+</map>

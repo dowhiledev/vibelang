@@ -1,0 +1,9 @@
+<map id="src/runtime/config.h" name="src/runtime/config.h">
+<area shape="rect" id="Node000001" title="Configuration management for the Vibe language runtime." alt="" coords="204,5,355,31"/>
+<area shape="rect" id="Node000002" href="$config_8c.html" title="Configuration management for the Vibe language runtime." alt="" coords="5,79,156,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="235,38,114,81,112,76,234,33"/>
+<area shape="rect" id="Node000003" href="$llm__interface_8c.html" title="Implementation of LLM API communications." alt="" coords="181,79,378,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="282,44,282,79,277,79,277,44"/>
+<area shape="rect" id="Node000004" href="$runtime_8c.html" title=" " alt="" coords="402,79,565,104"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="326,33,451,76,449,81,324,38"/>
+</map>

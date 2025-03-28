@@ -1,0 +1,36 @@
+<map id="src/runtime/runtime.c" name="src/runtime/runtime.c">
+<area shape="rect" id="Node000001" title=" " alt="" coords="421,5,584,31"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,79,72,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="421,32,268,53,91,81,86,82,85,77,90,76,267,48,421,27"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="273,152,340,177"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="421,23,341,28,255,38,182,55,155,66,137,80,129,95,131,108,142,119,160,129,209,145,260,155,259,160,207,150,158,134,139,123,127,110,124,94,133,77,152,62,180,50,255,32,340,23,421,18"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="147,79,218,104"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="449,33,232,81,231,76,448,28"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="242,79,313,104"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="467,33,327,77,325,72,466,28"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="337,79,412,104"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="483,33,409,74,407,69,481,28"/>
+<area shape="rect" id="Node000007" href="$runtime_8h.html" title="Runtime functions for the Vibe language." alt="" coords="593,79,753,104"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="531,28,634,71,632,76,529,33"/>
+<area shape="rect" id="Node000008" href="$vibelang_8h.html" title="Main public API for the VibeLanguage compiler and runtime." alt="" coords="745,152,836,177"/>
+<area shape="poly" id="edge12_Node000001_Node000008" title=" " alt="" coords="585,26,691,46,737,59,767,77,778,90,785,106,792,137,787,139,780,108,773,93,764,81,735,64,690,51,584,31"/>
+<area shape="rect" id="Node000013" href="$file__utils_8h.html" title=" " alt="" coords="436,79,569,104"/>
+<area shape="poly" id="edge13_Node000001_Node000013" title=" " alt="" coords="505,31,505,65,500,65,500,31"/>
+<area shape="rect" id="Node000014" href="$log__utils_8h.html" title=" " alt="" coords="828,79,961,104"/>
+<area shape="poly" id="edge15_Node000001_Node000014" title=" " alt="" coords="566,28,818,74,817,79,565,33"/>
+<area shape="rect" id="Node000015" href="$config_8h.html" title="Configuration management for the Vibe language runtime." alt="" coords="986,79,1059,104"/>
+<area shape="poly" id="edge16_Node000001_Node000015" title=" " alt="" coords="585,24,759,44,973,76,972,81,758,50,584,30"/>
+<area shape="rect" id="Node000016" href="$llm__interface_8h.html" title="Interface for LLM API communications." alt="" coords="1084,79,1204,104"/>
+<area shape="poly" id="edge17_Node000001_Node000016" title=" " alt="" coords="585,24,800,45,1071,76,1070,81,800,50,584,29"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="694,102,761,142,758,147,691,106"/>
+<area shape="rect" id="Node000009" href="$ast_8h.html" title=" " alt="" coords="763,225,818,251"/>
+<area shape="poly" id="edge8_Node000008_Node000009" title=" " alt="" coords="793,178,793,212,788,212,788,178"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="647,299,729,324"/>
+<area shape="poly" id="edge9_Node000009_Node000010" title=" " alt="" coords="776,253,718,293,715,288,773,248"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="753,299,828,324"/>
+<area shape="poly" id="edge10_Node000009_Node000011" title=" " alt="" coords="793,251,793,285,788,285,788,251"/>
+<area shape="rect" id="Node000012" title=" " alt="" coords="853,299,923,324"/>
+<area shape="poly" id="edge11_Node000009_Node000012" title=" " alt="" coords="808,249,862,288,859,292,805,253"/>
+<area shape="poly" id="edge14_Node000013_Node000003" title=" " alt="" coords="472,107,352,150,351,145,470,102"/>
+<area shape="poly" id="edge18_Node000016_Node000008" title=" " alt="" coords="1088,107,850,154,849,149,1087,101"/>
+</map>

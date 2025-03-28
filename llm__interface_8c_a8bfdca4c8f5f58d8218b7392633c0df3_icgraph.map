@@ -1,0 +1,7 @@
+<map id="parse_openai_response" name="parse_openai_response">
+<area shape="rect" id="Node000001" title=" " alt="" coords="399,5,573,31"/>
+<area shape="rect" id="Node000002" href="$llm__interface_8c.html#a315001ee5e5fa8ec058e1b542929ce33" title=" " alt="" coords="216,5,351,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="385,21,351,21,351,15,385,15"/>
+<area shape="rect" id="Node000003" href="$runtime_8c.html#a56ed7e5bace2cd71a2bbf24335101785" title=" " alt="" coords="5,5,168,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="202,21,168,21,168,15,202,15"/>
+</map>

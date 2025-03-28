@@ -1,0 +1,13 @@
+<map id="send_llm_prompt" name="send_llm_prompt">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,55,140,80"/>
+<area shape="rect" id="Node000002" href="$config_8c.html#ac5ae535cda839437eaf26ee7ec9c95f9" title=" " alt="" coords="227,5,327,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="125,52,214,30,215,36,127,57"/>
+<area shape="rect" id="Node000005" href="$llm__interface_8c.html#a8bfdca4c8f5f58d8218b7392633c0df3" title=" " alt="" coords="190,55,365,80"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="140,65,177,65,177,70,140,70"/>
+<area shape="rect" id="Node000006" href="$llm__interface_8c.html#a4d7f67ad225ca3212923c19479803b98" title=" " alt="" coords="188,104,367,129"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="127,77,211,98,210,103,125,83"/>
+<area shape="rect" id="Node000003" href="$config_8c.html#ad4569c6ec39efb64b83f7a7ea76dd836" title=" " alt="" coords="415,5,511,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="328,15,401,15,401,21,328,21"/>
+<area shape="rect" id="Node000004" href="$file__utils_8c.html#a465f5441ca7fc78824e4e834b46a747f" title=" " alt="" coords="559,5,647,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="511,15,545,15,545,21,511,21"/>
+</map>

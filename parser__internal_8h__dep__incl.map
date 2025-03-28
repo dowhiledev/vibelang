@@ -1,0 +1,10 @@
+<map id="src/compiler/parser_internal.h" name="src/compiler/parser_internal.h">
+<area shape="rect" id="Node000001" title="Internal definitions for the Vibe language parser." alt="" coords="117,5,264,45"/>
+<area shape="rect" id="Node000002" href="$parser_8h.html" title=" " alt="" coords="53,93,211,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="171,58,143,95,139,91,166,55"/>
+<area shape="rect" id="Node000004" href="$parser__impl_8c.html" title="Implementation of parser interface functions for the packrat parser." alt="" coords="176,167,323,207"/>
+<area shape="poly" id="edge4_Node000001_Node000004" title=" " alt="" coords="210,56,227,92,248,166,243,167,221,94,205,59"/>
+<area shape="rect" id="Node000003" href="$parser__bison_8h.html" title="Compatibility header for Bison parser tests." alt="" coords="5,167,152,207"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="119,131,94,168,89,165,114,128"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="162,124,222,164,220,169,159,128"/>
+</map>

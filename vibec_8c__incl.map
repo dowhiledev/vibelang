@@ -1,0 +1,24 @@
+<map id="src/tools/vibec.c" name="src/tools/vibec.c">
+<area shape="rect" id="Node000001" title="Vibe language compiler command line tool." alt="" coords="415,5,542,31"/>
+<area shape="rect" id="Node000002" href="$vibelang_8h.html" title="Main public API for the VibeLanguage compiler and runtime." alt="" coords="67,79,232,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="426,33,216,78,215,73,425,28"/>
+<area shape="rect" id="Node000007" href="$file__utils_8h.html" title=" " alt="" coords="256,79,389,104"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="455,33,362,75,360,70,453,28"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="341,152,408,177"/>
+<area shape="poly" id="edge9_Node000001_Node000008" title=" " alt="" coords="472,33,393,142,389,139,468,30"/>
+<area shape="rect" id="Node000009" href="$log__utils_8h.html" title=" " alt="" coords="464,79,597,104"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="489,29,516,66,512,69,485,33"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="622,79,693,104"/>
+<area shape="poly" id="edge10_Node000001_Node000010" title=" " alt="" coords="508,28,617,71,615,76,506,33"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="717,79,787,104"/>
+<area shape="poly" id="edge11_Node000001_Node000011" title=" " alt="" coords="523,28,704,75,703,80,522,33"/>
+<area shape="rect" id="Node000003" href="$ast_8h.html" title=" " alt="" coords="122,152,177,177"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="152,104,152,138,147,138,147,104"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="5,225,88,251"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="134,180,76,219,73,215,131,175"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="112,225,187,251"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="152,178,152,212,147,212,147,178"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="211,225,282,251"/>
+<area shape="poly" id="edge5_Node000003_Node000006" title=" " alt="" coords="167,175,221,215,218,219,163,180"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="333,103,360,139,356,142,329,106"/>
+</map>

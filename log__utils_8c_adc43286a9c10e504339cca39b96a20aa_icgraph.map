@@ -1,0 +1,11 @@
+<map id="init_logging" name="init_logging">
+<area shape="rect" id="Node000001" title=" " alt="" coords="421,5,520,31"/>
+<area shape="rect" id="Node000002" href="$vibec_8c.html#a0ddf1224851353fc92bfbff6f499fa97" title=" " alt="" coords="5,31,60,56"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="407,17,270,15,189,19,108,27,61,38,60,33,108,22,188,14,270,10,407,12"/>
+<area shape="rect" id="Node000003" href="$vibelang_8c.html#afe20e8052e589d128e16d45d504159fb" title=" " alt="" coords="267,31,373,56"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="409,31,374,37,373,32,408,26"/>
+<area shape="poly" id="edge5_Node000003_Node000002" title=" " alt="" coords="253,46,60,46,60,41,253,41"/>
+<area shape="rect" id="Node000004" href="$vibec_8c.html#a8d42a0de719f7340c26f7c054cb5e0a5" title=" " alt="" coords="108,81,219,107"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="268,63,204,84,203,79,266,58"/>
+<area shape="poly" id="edge4_Node000004_Node000002" title=" " alt="" coords="116,79,59,56,61,51,118,74"/>
+</map>

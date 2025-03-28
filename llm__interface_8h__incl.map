@@ -1,0 +1,13 @@
+<map id="src/runtime/llm_interface.h" name="src/runtime/llm_interface.h">
+<area shape="rect" id="Node000001" title="Interface for LLM API communications." alt="" coords="50,5,249,31"/>
+<area shape="rect" id="Node000002" href="$vibelang_8h.html" title="Main public API for the VibeLanguage compiler and runtime." alt="" coords="67,79,232,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="152,31,152,65,147,65,147,31"/>
+<area shape="rect" id="Node000003" href="$ast_8h.html" title=" " alt="" coords="122,152,177,177"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="152,104,152,138,147,138,147,104"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="5,225,88,251"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="134,180,76,219,73,215,131,175"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="112,225,187,251"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="152,178,152,212,147,212,147,178"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="211,225,282,251"/>
+<area shape="poly" id="edge5_Node000003_Node000006" title=" " alt="" coords="167,175,221,215,218,219,163,180"/>
+</map>

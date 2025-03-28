@@ -1,0 +1,17 @@
+<map id="src/compiler/parser.h" name="src/compiler/parser.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="70,5,229,31"/>
+<area shape="rect" id="Node000002" href="$ast_8h.html" title=" " alt="" coords="100,152,199,177"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="125,33,96,52,83,65,73,80,71,98,79,115,95,130,114,143,111,148,91,134,75,118,65,99,68,78,79,62,93,48,122,29"/>
+<area shape="rect" id="Node000006" href="$parser__internal_8h.html" title="Internal definitions for the Vibe language parser." alt="" coords="83,79,215,104"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="152,31,152,65,147,65,147,31"/>
+<area shape="rect" id="Node000007" href="$parser__utils_8h.html" title=" " alt="" coords="239,79,350,104"/>
+<area shape="poly" id="edge7_Node000001_Node000007" title=" " alt="" coords="174,28,260,70,258,75,172,33"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,225,88,251"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="134,180,76,219,73,215,131,175"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="112,225,187,251"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="152,178,152,212,147,212,147,178"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="211,225,282,251"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="167,175,221,215,218,219,163,180"/>
+<area shape="poly" id="edge6_Node000006_Node000002" title=" " alt="" coords="152,104,152,138,147,138,147,104"/>
+<area shape="poly" id="edge8_Node000007_Node000002" title=" " alt="" coords="272,106,186,148,184,144,270,102"/>
+</map>

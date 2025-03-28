@@ -1,0 +1,12 @@
+<map id="get_api_key" name="get_api_key">
+<area shape="rect" id="Node000001" title=" " alt="" coords="413,56,513,81"/>
+<area shape="rect" id="Node000002" href="$llm__interface_8c.html#a42522058aa6a26228a0d158723d878d7" title=" " alt="" coords="216,5,365,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="405,55,334,33,336,28,407,49"/>
+<area shape="rect" id="Node000003" href="$runtime_8c.html#a2afe2c31554174448f09cd193aaa01ea" title=" " alt="" coords="19,31,155,56"/>
+<area shape="poly" id="edge5_Node000001_Node000003" title=" " alt="" coords="400,67,155,51,155,45,400,62"/>
+<area shape="rect" id="Node000004" href="$llm__interface_8c.html#a315001ee5e5fa8ec058e1b542929ce33" title=" " alt="" coords="223,107,358,132"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="407,88,336,109,334,104,405,83"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="202,32,155,38,155,32,202,26"/>
+<area shape="rect" id="Node000005" href="$runtime_8c.html#a56ed7e5bace2cd71a2bbf24335101785" title=" " alt="" coords="5,107,168,132"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="209,122,168,122,168,117,209,117"/>
+</map>

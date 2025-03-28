@@ -1,0 +1,31 @@
+<map id="src/utils/log_utils.h" name="src/utils/log_utils.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="1229,5,1373,31"/>
+<area shape="rect" id="Node000002" href="$codegen_8c.html" title="Code generation implementation for the Vibe language compiler." alt="" coords="5,86,177,111"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="1215,23,1029,26,775,36,484,53,190,81,145,89,144,83,190,76,484,48,775,30,1029,21,1215,17"/>
+<area shape="rect" id="Node000003" href="$parser__impl_8c.html" title="Implementation of parser interface functions for the packrat parser." alt="" coords="202,79,349,119"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="1215,23,1056,27,843,37,603,54,361,81,349,83,348,78,360,76,602,49,843,32,1055,22,1215,18"/>
+<area shape="rect" id="Node000004" href="$parser__utils_8c.html" title=" " alt="" coords="373,79,519,119"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="1215,25,912,41,722,58,532,81,520,83,519,78,531,76,722,53,912,36,1214,19"/>
+<area shape="rect" id="Node000005" href="$semantic_8c.html" title="Implementation of semantic analysis for the Vibe language compiler." alt="" coords="544,86,721,111"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="1215,29,997,49,734,81,690,89,689,83,734,76,996,44,1215,24"/>
+<area shape="rect" id="Node000006" href="$symbol__table_8c.html" title=" " alt="" coords="746,79,901,119"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="1216,34,913,81,901,84,900,78,912,76,1215,28"/>
+<area shape="rect" id="Node000007" href="$config_8c.html" title="Configuration management for the Vibe language runtime." alt="" coords="925,86,1076,111"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="1245,37,1045,89,1044,83,1243,31"/>
+<area shape="rect" id="Node000008" href="$llm__interface_8c.html" title="Implementation of LLM API communications." alt="" coords="1101,86,1298,111"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="1276,41,1216,88,1213,84,1273,37"/>
+<area shape="rect" id="Node000009" href="$runtime_8c.html" title=" " alt="" coords="1322,86,1485,111"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="1329,37,1390,84,1387,88,1325,41"/>
+<area shape="rect" id="Node000010" href="$vibec_8c.html" title="Vibe language compiler command line tool." alt="" coords="1509,86,1636,111"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="1354,32,1534,83,1532,89,1353,37"/>
+<area shape="rect" id="Node000011" href="$ast_8c.html" title=" " alt="" coords="1660,86,1768,111"/>
+<area shape="poly" id="edge10_Node000001_Node000011" title=" " alt="" coords="1386,29,1511,49,1649,76,1678,83,1676,89,1648,81,1510,54,1386,34"/>
+<area shape="rect" id="Node000012" href="$cache__utils_8c.html" title=" " alt="" coords="1792,86,1953,111"/>
+<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="1387,25,1569,46,1781,76,1821,83,1820,89,1780,81,1568,51,1386,31"/>
+<area shape="rect" id="Node000013" href="$file__utils_8c.html" title=" " alt="" coords="1977,86,2120,111"/>
+<area shape="poly" id="edge12_Node000001_Node000013" title=" " alt="" coords="1387,21,1647,39,1806,55,1966,76,2004,83,2003,89,1966,81,1806,60,1646,44,1386,26"/>
+<area shape="rect" id="Node000014" href="$log__utils_8c.html" title=" " alt="" coords="2144,86,2287,111"/>
+<area shape="poly" id="edge13_Node000001_Node000014" title=" " alt="" coords="1387,19,1715,34,1924,51,2133,76,2171,83,2170,89,2132,81,1923,56,1715,39,1386,24"/>
+<area shape="rect" id="Node000015" href="$vibelang_8c.html" title=" " alt="" coords="2311,86,2423,111"/>
+<area shape="poly" id="edge14_Node000001_Node000015" title=" " alt="" coords="1386,16,1555,17,1783,25,2040,43,2172,58,2300,76,2332,83,2331,89,2299,81,2171,63,2040,49,1782,30,1555,23,1386,21"/>
+</map>
