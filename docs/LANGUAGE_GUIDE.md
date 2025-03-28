@@ -1,5 +1,4 @@
-make ins# VibeLang Language Guide
-
+# VibeLang Language Guide
 This guide covers the syntax and features of the VibeLang programming language.
 
 ## Language Overview
