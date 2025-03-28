@@ -1,11 +1,11 @@
 <h1>
   <div>
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="assets/icon-light.svg" width="60" height="60">
+      <source media="(prefers-color-scheme: dark)" srcset="assets/icon-light.svg" width="400" height="100">
       <source media="(prefers-color-scheme: light)" srcset="assets/icon-dark.svg" width="60" height="60">
       <img alt="VibeLang Icon" style="vertical-align: middle;">
     </picture>
-    <span style="vertical-align: middle; margin-left: 10px;">VibeLang</span>
+    <!-- <span style="vertical-align: middle; margin-left: 10px;">VibeLang</span> -->
   </div>
 </h1>
 

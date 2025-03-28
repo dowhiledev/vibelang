@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="1200pt" height="1200pt" version="1.1" viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">
- <path d="m120 555.6h60v30h-60z" fill="white"/>
- <path d="m180 525.6v30h180v30h30v30h30v30h30v30h210v-30h30v-30h30v-30h60v30h30v30h210v-30h30v-30h30v-60zm390 120h-30v-30h-30v30h-30v-30h-30v-30h-30v-30h30v30h30v-30h30v30h30v30h30zm360-30h-30v-30h-30v30h-30v-30h-30v-30h30v30h30v-30h30v30h30z" fill="white"/>
- <path d="m480 585.6h30v30h-30z" fill="white"/>
+<svg width="1200pt" height="300" version="1.1" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+ <text x="213.8" y="391.3" font-family="Gill Sans" font-size="300" fill="white">VibeLang</text>
+ <g>
+    <path d="M -646.3 290.5 h 30 v 30 h -30 z" fill="white"/>
+    <path d="M -1006.3 260.5 h 60 v 30 h -60 z" fill="white"/>
+    <path fill="white" d="M -946.3 230.5 v 30 h 180 v 30 h 30 v 30 h 30 v 30 h 30 v 30 h 210 v -30 h 30 v -30 h 30 v -30 h 60 v 30 h 30 v 30 h 210 v -30 h 30 v -30 h 30 v -60 z m 390 120 h -30 v -30 h -30 v 30 h -30 v -30 h -30 v -30 h -30 v -30 h 30 v 30 h 30 v -30 h 30 v 30 h 30 v 30 h 30 z m 360 -30 h -30 v -30 h -30 v 30 h -30 v -30 h -30 v -30 h 30 v 30 h 30 v -30 h 30 v 30 h 30 z"/>
+</g>
 </svg>
