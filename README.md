@@ -1,6 +1,6 @@
 <h1>
-  <div style="display: flex; align-items: center;">
-    <picture style="vertical-align: middle;">
+  <div>
+    <picture>
       <source media="(prefers-color-scheme: dark)" srcset="assets/icon-light.svg" width="60" height="60">
       <source media="(prefers-color-scheme: light)" srcset="assets/icon-dark.svg" width="60" height="60">
       <img alt="VibeLang Icon" style="vertical-align: middle;">
