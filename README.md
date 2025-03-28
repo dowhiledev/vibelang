@@ -1,4 +1,4 @@
-<h1 align="center">
+<h1>
   <div style="display: flex; align-items: center;">
     <picture style="vertical-align: middle;">
       <source media="(prefers-color-scheme: dark)" srcset="assets/icon-light.svg" width="60" height="60">
