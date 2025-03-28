@@ -97,6 +97,21 @@ You can also set the `VIBE_API_KEY` environment variable instead of including it
 - [Developer Guide](docs/DEVELOPER_GUIDE.md) - Contributing to VibeLang
 - [Implementation Details](docs/IMPLEMENTATION.md) - Technical details about the compiler
 
+## Known Issues
+- Parameter type resolution may not work correctly in some cases.
+- No way to execute vibe without integrating with a C program. (yet)
+- Some features may not be fully implemented or tested.
+- Limited support for complex data structures (e.g., nested objects).
+- Error handling is basic and may not cover all edge cases.
+
+## To-Do
+- Integration with C and Python bindings.
+- Improved error handling and diagnostics.
+- More examples and tutorials.
+- Support for more LLM providers.
+- Enhanced caching mechanisms.
+- Improved performance and optimizations.
+
 ## License
 
 VibeLang is licensed under the MIT License. See [LICENSE](LICENSE) for details.
