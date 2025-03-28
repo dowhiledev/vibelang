@@ -51,6 +51,21 @@ add_executable(test_codegen
 target_link_libraries(test_codegen PRIVATE vibelang_compiler vibelang_utils cjson)
 add_test(NAME test_codegen COMMAND test_codegen)
 
+# Add unit test executable for the LLM integration
+add_executable(test_llm_integration 
+  unit/test_llm_integration.c
+)
+
+# Link against the library
+target_link_libraries(test_llm_integration 
+  vibelang_runtime
+  vibelang_utils
+)
+
+# Add to CTest test suite
+add_test(NAME test_llm_integration
+         COMMAND test_llm_integration)
+
 # Create test data directory during build
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/unit/data)
 
