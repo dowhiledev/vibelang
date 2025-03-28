@@ -4,18 +4,9 @@ type Temperature = Meaning<Int>("temperature in Celsius");
 type Forecast = Meaning<String>("weather forecast description");
 
 fn getTemperature(city: Meaning<String>("city name")) -> Temperature {
-    prompt "What is the current temperature in {city} in Celsius?"
+    prompt "What is the current temperature in {city} in Celsius?";
 }
 
 fn getForecast(city: Meaning<String>("city name"), day: Meaning<String>("day of the week")) -> Forecast {
-    prompt "Provide a brief weather forecast for {city} on {day}."
-}
-
-fn main() {
-    let city = "San Francisco";
-    let temp = getTemperature(city);
-    let forecast = getForecast(city, "Monday");
-    
-    print("The temperature in {city} is {temp}°C");
-    print("Forecast: {forecast}");
+    prompt "Provide a brief weather forecast for {city} on {day}.";
 }
