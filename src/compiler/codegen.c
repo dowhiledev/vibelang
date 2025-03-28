@@ -3,699 +3,821 @@
  * @brief Code generation implementation for the Vibe language compiler
  */
 
+#include "../utils/ast.h"
+#include "../utils/file_utils.h"
+#include "../utils/log_utils.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include "../utils/ast.h"
-#include "../utils/log_utils.h"
-#include "../utils/file_utils.h"
 
 // Forward declarations
-static int generate_function(ast_node_t* func, FILE* file);
-static int generate_statement_list(ast_node_t* stmt_list, FILE* file, int indent);
-static int generate_statement(ast_node_t* stmt, FILE* file, int indent);
-static int generate_expression(ast_node_t* expr, FILE* file);
-static int generate_type_declaration(ast_node_t* type_decl, FILE* file);
-static int generate_prompt_block(ast_node_t* prompt, FILE* file);
-static int generate_headers(FILE* file);
+static int generate_function(ast_node_t *func, FILE *file);
+static int generate_statement_list(ast_node_t *stmt_list, FILE *file,
+                                   int indent);
+static int generate_statement(ast_node_t *stmt, FILE *file, int indent);
+static int generate_expression(ast_node_t *expr, FILE *file);
+static int generate_type_declaration(ast_node_t *type_decl, FILE *file);
+static int generate_prompt_block(ast_node_t *prompt, FILE *file, int indent);
+static int generate_headers(FILE *file);
 
 // Helper function to add indentation to the output
-static void add_indent(FILE* file, int indent) {
-    for (int i = 0; i < indent; i++) {
-        fprintf(file, "    ");
-    }
+static void add_indent(FILE *file, int indent) {
+  for (int i = 0; i < indent; i++) {
+    fprintf(file, "    ");
+  }
 }
 
 // Helper function to parse a template string and extract variable references
-static char** extract_variables(const char* template, int* count) {
-    char** variables = NULL;
-    *count = 0;
-    
-    if (!template) return NULL;
-    
-    // First count the number of variables
-    const char* ptr = template;
-    while ((ptr = strchr(ptr, '{')) != NULL) {
-        const char* end = strchr(ptr, '}');
-        if (end != NULL) {
-            (*count)++;
-            ptr = end + 1;
-        } else {
-            break;
+static char **extract_variables(const char *template, int *count) {
+  char **variables = NULL;
+  *count = 0;
+
+  if (!template)
+    return NULL;
+
+  // First count the number of variables
+  const char *ptr = template;
+  while ((ptr = strchr(ptr, '{')) != NULL) {
+    const char *end = strchr(ptr, '}');
+    if (end != NULL) {
+      (*count)++;
+      ptr = end + 1;
+    } else {
+      break;
+    }
+  }
+
+  if (*count == 0) {
+    return NULL;
+  }
+
+  // Allocate memory for the variable names
+  variables = (char **)malloc(sizeof(char *) * (*count));
+  if (!variables) {
+    ERROR("Failed to allocate memory for variables");
+    return NULL;
+  }
+
+  // Extract the variable names
+  int index = 0;
+  ptr = template;
+  while ((ptr = strchr(ptr, '{')) != NULL) {
+    const char *end = strchr(ptr, '}');
+    if (end != NULL) {
+      size_t len = end - ptr - 1;
+      variables[index] = (char *)malloc(len + 1);
+      if (!variables[index]) {
+        ERROR("Failed to allocate memory for variable name");
+        // Free already allocated variables
+        for (int i = 0; i < index; i++) {
+          free(variables[i]);
         }
-    }
-    
-    if (*count == 0) {
+        free(variables);
+        *count = 0;
         return NULL;
+      }
+      strncpy(variables[index], ptr + 1, len);
+      variables[index][len] = '\0';
+      index++;
+      ptr = end + 1;
+    } else {
+      break;
     }
-    
-    // Allocate memory for the variable names
-    variables = (char**)malloc(sizeof(char*) * (*count));
-    if (!variables) {
-        ERROR("Failed to allocate memory for variables");
-        return NULL;
-    }
-    
-    // Extract the variable names
-    int index = 0;
-    ptr = template;
-    while ((ptr = strchr(ptr, '{')) != NULL) {
-        const char* end = strchr(ptr, '}');
-        if (end != NULL) {
-            size_t len = end - ptr - 1;
-            variables[index] = (char*)malloc(len + 1);
-            if (!variables[index]) {
-                ERROR("Failed to allocate memory for variable name");
-                // Free already allocated variables
-                for (int i = 0; i < index; i++) {
-                    free(variables[i]);
-                }
-                free(variables);
-                *count = 0;
-                return NULL;
-            }
-            strncpy(variables[index], ptr + 1, len);
-            variables[index][len] = '\0';
-            index++;
-            ptr = end + 1;
-        } else {
-            break;
-        }
-    }
-    
-    return variables;
+  }
+
+  return variables;
 }
 
 /**
  * Generate code from the AST and write it to an output file
- * 
+ *
  * @param ast The root AST node
  * @param output_file The path to the output file
  * @return 1 on success, 0 on error
  */
-int generate_code(ast_node_t* ast, const char* output_file) {
-    FILE* file = NULL;
-    
-    // Check parameters
-    if (!ast || !output_file) {
-        ERROR("Invalid parameters for code generation");
-        return 0;
-    }
-    
-    INFO("Generating code to %s", output_file);
-    
-    // Open the output file
-    file = fopen(output_file, "w");
-    if (!file) {
-        ERROR("Failed to open output file: %s", output_file);
-        return 0;
-    }
-    
-    // Generate standard headers and includes
-    if (!generate_headers(file)) {
-        ERROR("Failed to generate headers");
+int generate_code(ast_node_t *ast, const char *output_file) {
+  FILE *file = NULL;
+
+  // Check parameters
+  if (!ast || !output_file) {
+    ERROR("Invalid parameters for code generation");
+    return 0;
+  }
+
+  INFO("Generating code to %s", output_file);
+
+  // Open the output file
+  file = fopen(output_file, "w");
+  if (!file) {
+    ERROR("Failed to open output file: %s", output_file);
+    return 0;
+  }
+
+  // Generate standard headers and includes
+  if (!generate_headers(file)) {
+    ERROR("Failed to generate headers");
+    fclose(file);
+    return 0;
+  }
+
+  // Process each declaration in the AST
+  for (int i = 0; i < ast->child_count; i++) {
+    ast_node_t *decl = ast->children[i];
+
+    switch (decl->type) {
+    case AST_FUNCTION_DECL:
+      if (!generate_function(decl, file)) {
+        ERROR("Failed to generate function");
         fclose(file);
         return 0;
+      }
+      break;
+
+    case AST_TYPE_DECL:
+      if (!generate_type_declaration(decl, file)) {
+        ERROR("Failed to generate type declaration");
+        fclose(file);
+        return 0;
+      }
+      break;
+
+      // Add other declaration types as needed
+
+    default:
+      WARN("Unsupported declaration type: %d", decl->type);
+      break;
     }
-    
-    // Process each declaration in the AST
-    for (int i = 0; i < ast->child_count; i++) {
-        ast_node_t* decl = ast->children[i];
-        
-        switch (decl->type) {
-            case AST_FUNCTION_DECL:
-                if (!generate_function(decl, file)) {
-                    ERROR("Failed to generate function");
-                    fclose(file);
-                    return 0;
-                }
-                break;
-                
-            case AST_TYPE_DECL:
-                if (!generate_type_declaration(decl, file)) {
-                    ERROR("Failed to generate type declaration");
-                    fclose(file);
-                    return 0;
-                }
-                break;
-                
-            // Add other declaration types as needed
-                
-            default:
-                WARN("Unsupported declaration type: %d", decl->type);
-                break;
-        }
-    }
-    
-    // Close the file
-    fclose(file);
-    
-    INFO("Code generation completed successfully");
-    return 1;
+  }
+
+  // Close the file
+  fclose(file);
+
+  INFO("Code generation completed successfully");
+  return 1;
 }
 
 /**
  * Generate the required runtime headers and includes
- * 
+ *
  * @param file The file to write to
  * @return 1 on success, 0 on error
  */
-static int generate_headers(FILE* file) {
-    if (!file) return 0;
-    
-    fprintf(file, "/**\n");
-    fprintf(file, " * Generated by VibeLanguage Compiler\n");
-    fprintf(file, " */\n\n");
-    
-    fprintf(file, "#include <stdio.h>\n");
-    fprintf(file, "#include <stdlib.h>\n");
-    fprintf(file, "#include <string.h>\n");
-    fprintf(file, "#include \"vibelang.h\"\n\n");
-    
-    return 1;
+static int generate_headers(FILE *file) {
+  if (!file)
+    return 0;
+
+  fprintf(file, "/**\n");
+  fprintf(file, " * Generated by VibeLanguage Compiler\n");
+  fprintf(file, " */\n\n");
+
+  fprintf(file, "#include <stdio.h>\n");
+  fprintf(file, "#include <stdlib.h>\n");
+  fprintf(file, "#include <string.h>\n");
+  fprintf(file, "#include \"vibelang.h\"\n\n");
+
+  return 1;
 }
 
 /**
  * Generate code for a function declaration
- * 
+ *
  * @param func The function declaration AST node
  * @param file The file to write to
  * @return 1 on success, 0 on error
  */
-static int generate_function(ast_node_t* func, FILE* file) {
-    if (!func || !file) return 0;
-    
-    const char* func_name = ast_get_string(func, "name");
-    if (!func_name) {
-        ERROR("Function name not found");
+static int generate_function(ast_node_t *func, FILE *file) {
+  if (!func || !file)
+    return 0;
+
+  const char *func_name = ast_get_string(func, "name");
+  if (!func_name) {
+    ERROR("Function name not found");
+    return 0;
+  }
+
+  // Find return type
+  const char *return_type = "void"; // Default
+  ast_node_t *type_node = NULL;
+  for (int i = 0; i < func->child_count; i++) {
+    if (func->children[i]->type == AST_BASIC_TYPE ||
+        func->children[i]->type == AST_MEANING_TYPE) {
+      type_node = func->children[i];
+      if (func->children[i]->type == AST_BASIC_TYPE) {
+        return_type = ast_get_string(func->children[i], "type");
+      } else {
+        // For meaning types, use the type name directly instead of the base
+        // type This ensures we use "Weather" instead of "String" for the return
+        // type
+        return_type = ast_get_string(func->children[i], "meaning");
+
+        // If no meaning string is available, try to get the base type
+        if (!return_type) {
+          for (int j = 0; j < func->children[i]->child_count; j++) {
+            if (func->children[i]->children[j]->type == AST_BASIC_TYPE) {
+              return_type =
+                  ast_get_string(func->children[i]->children[j], "type");
+              break;
+            }
+          }
+        }
+      }
+      break;
+    }
+  }
+
+  // Map VibeLanguage types to C types, preserving custom types like "Weather"
+  const char *c_type;
+  if (strcmp(return_type, "Int") == 0) {
+    c_type = "int";
+  } else if (strcmp(return_type, "Float") == 0) {
+    c_type = "double";
+  } else if (strcmp(return_type, "String") == 0) {
+    c_type = "char*";
+  } else if (strcmp(return_type, "Bool") == 0) {
+    c_type = "int";
+  } else if (strcmp(return_type, "void") == 0) {
+    c_type = "void";
+  } else {
+    // For custom types (like Weather), use the type name directly
+    c_type = return_type;
+  }
+
+  // Write function signature
+  fprintf(file, "%s %s(", c_type, func_name);
+
+  // Find parameter list and write parameters
+  ast_node_t *param_list = NULL;
+  for (int i = 0; i < func->child_count; i++) {
+    if (func->children[i]->type == AST_PARAM_LIST) {
+      param_list = func->children[i];
+      break;
+    }
+  }
+
+  if (param_list) {
+    for (int i = 0; i < param_list->child_count; i++) {
+      ast_node_t *param = param_list->children[i];
+      if (param->type == AST_PARAMETER) {
+        const char *param_name = ast_get_string(param, "name");
+        const char *param_type = "void"; // Default
+
+        for (int j = 0; j < param->child_count; j++) {
+          if (param->children[j]->type == AST_BASIC_TYPE) {
+            param_type = ast_get_string(param->children[j], "type");
+            break;
+          }
+        }
+
+        // Map VibeLanguage types to C types
+        const char *c_param_type = "void";
+        if (strcmp(param_type, "Int") == 0) {
+          c_param_type = "int";
+        } else if (strcmp(param_type, "Float") == 0) {
+          c_param_type = "double";
+        } else if (strcmp(param_type, "String") == 0) {
+          c_param_type = "const char*";
+        } else if (strcmp(param_type, "Bool") == 0) {
+          c_param_type = "int";
+        }
+
+        fprintf(file, "%s %s", c_param_type, param_name);
+
+        if (i < param_list->child_count - 1) {
+          fprintf(file, ", ");
+        }
+      }
+    }
+  }
+
+  fprintf(file, ") {\n");
+
+  // Find function body and generate code
+  ast_node_t *body = NULL;
+  for (int i = 0; i < func->child_count; i++) {
+    if (func->children[i]->type == AST_FUNCTION_BODY) {
+      body = func->children[i];
+      break;
+    }
+  }
+
+  if (body) {
+    // Generate statements in the function body
+    for (int i = 0; i < body->child_count; i++) {
+      if (!generate_statement(body->children[i], file, 1)) {
+        ERROR("Failed to generate statement");
         return 0;
+      }
     }
-    
-    // Find return type
-    const char* return_type = "void";  // Default
-    for (int i = 0; i < func->child_count; i++) {
-        if (func->children[i]->type == AST_BASIC_TYPE || 
-            func->children[i]->type == AST_MEANING_TYPE) {
-            if (func->children[i]->type == AST_BASIC_TYPE) {
-                return_type = ast_get_string(func->children[i], "type");
-            } else {
-                // For meaning types, use the base type for now
-                for (int j = 0; j < func->children[i]->child_count; j++) {
-                    if (func->children[i]->children[j]->type == AST_BASIC_TYPE) {
-                        return_type = ast_get_string(func->children[i]->children[j], "type");
-                        break;
-                    }
-                }
-            }
-            break;
-        }
-    }
-    
-    // Map VibeLanguage types to C types
-    const char* c_type = "void";
-    if (strcmp(return_type, "Int") == 0) {
-        c_type = "int";
-    } else if (strcmp(return_type, "Float") == 0) {
-        c_type = "double";
-    } else if (strcmp(return_type, "String") == 0) {
-        c_type = "char*";
-    } else if (strcmp(return_type, "Bool") == 0) {
-        c_type = "int";
-    }
-    
-    // Write function signature
-    fprintf(file, "%s %s(", c_type, func_name);
-    
-    // Find parameter list and write parameters
-    ast_node_t* param_list = NULL;
-    for (int i = 0; i < func->child_count; i++) {
-        if (func->children[i]->type == AST_PARAM_LIST) {
-            param_list = func->children[i];
-            break;
-        }
-    }
-    
-    if (param_list) {
-        for (int i = 0; i < param_list->child_count; i++) {
-            ast_node_t* param = param_list->children[i];
-            if (param->type == AST_PARAMETER) {
-                const char* param_name = ast_get_string(param, "name");
-                const char* param_type = "void";  // Default
-                
-                for (int j = 0; j < param->child_count; j++) {
-                    if (param->children[j]->type == AST_BASIC_TYPE) {
-                        param_type = ast_get_string(param->children[j], "type");
-                        break;
-                    }
-                }
-                
-                // Map VibeLanguage types to C types
-                const char* c_param_type = "void";
-                if (strcmp(param_type, "Int") == 0) {
-                    c_param_type = "int";
-                } else if (strcmp(param_type, "Float") == 0) {
-                    c_param_type = "double";
-                } else if (strcmp(param_type, "String") == 0) {
-                    c_param_type = "const char*";
-                } else if (strcmp(param_type, "Bool") == 0) {
-                    c_param_type = "int";
-                }
-                
-                fprintf(file, "%s %s", c_param_type, param_name);
-                
-                if (i < param_list->child_count - 1) {
-                    fprintf(file, ", ");
-                }
-            }
-        }
-    }
-    
-    fprintf(file, ") {\n");
-    
-    // Find function body and generate code
-    ast_node_t* body = NULL;
-    for (int i = 0; i < func->child_count; i++) {
-        if (func->children[i]->type == AST_FUNCTION_BODY) {
-            body = func->children[i];
-            break;
-        }
-    }
-    
-    if (body) {
-        // Generate statements in the function body
-        for (int i = 0; i < body->child_count; i++) {
-            if (!generate_statement(body->children[i], file, 1)) {
-                ERROR("Failed to generate statement");
-                return 0;
-            }
-        }
-    }
-    
-    fprintf(file, "}\n\n");
-    return 1;
+  }
+
+  fprintf(file, "}\n\n");
+  return 1;
 }
 
 /**
  * Generate code for a type declaration
- * 
+ *
  * @param type_decl The type declaration AST node
  * @param file The file to write to
  * @return 1 on success, 0 on error
  */
-static int generate_type_declaration(ast_node_t* type_decl, FILE* file) {
-    if (!type_decl || !file) return 0;
-    
-    const char* type_name = ast_get_string(type_decl, "name");
-    if (!type_name) {
-        ERROR("Type name not found");
-        return 0;
-    }
-    
-    // For now, just add a comment about the type since C doesn't have direct analogues to meaning types
-    fprintf(file, "/* Type %s ", type_name);
-    
-    if (type_decl->child_count > 0) {
-        ast_node_t* base_type = type_decl->children[0];
-        
-        if (base_type->type == AST_MEANING_TYPE) {
-            const char* meaning = ast_get_string(base_type, "meaning");
-            fprintf(file, "with meaning \"%s\" ", meaning ? meaning : "unknown");
-            
-            // Get the base type of the meaning type
-            if (base_type->child_count > 0) {
-                const char* base_type_name = "unknown";
-                if (base_type->children[0]->type == AST_BASIC_TYPE) {
-                    base_type_name = ast_get_string(base_type->children[0], "type");
-                }
-                fprintf(file, "and base type %s ", base_type_name);
-            }
-        } else if (base_type->type == AST_BASIC_TYPE) {
-            const char* base_type_name = ast_get_string(base_type, "type");
-            fprintf(file, "as alias for %s ", base_type_name ? base_type_name : "unknown");
+static int generate_type_declaration(ast_node_t *type_decl, FILE *file) {
+  if (!type_decl || !file)
+    return 0;
+
+  const char *type_name = ast_get_string(type_decl, "name");
+  if (!type_name) {
+    ERROR("Type name not found");
+    return 0;
+  }
+
+  // For now, just add a comment about the type since C doesn't have direct
+  // analogues to meaning types
+  fprintf(file, "/* Type %s ", type_name);
+
+  if (type_decl->child_count > 0) {
+    ast_node_t *base_type = type_decl->children[0];
+
+    if (base_type->type == AST_MEANING_TYPE) {
+      const char *meaning = ast_get_string(base_type, "meaning");
+      fprintf(file, "with meaning \"%s\" ", meaning ? meaning : "unknown");
+
+      // Get the base type of the meaning type
+      if (base_type->child_count > 0) {
+        const char *base_type_name = "unknown";
+        if (base_type->children[0]->type == AST_BASIC_TYPE) {
+          base_type_name = ast_get_string(base_type->children[0], "type");
         }
+        fprintf(file, "and base type %s ", base_type_name);
+      }
+    } else if (base_type->type == AST_BASIC_TYPE) {
+      const char *base_type_name = ast_get_string(base_type, "type");
+      fprintf(file, "as alias for %s ",
+              base_type_name ? base_type_name : "unknown");
     }
-    
-    fprintf(file, "*/\n");
-    
-    // Define the base C type as a typedef
-    const char* c_type = "void";
-    if (type_decl->child_count > 0) {
-        ast_node_t* base_type = type_decl->children[0];
-        
-        if (base_type->type == AST_MEANING_TYPE && base_type->child_count > 0) {
-            if (base_type->children[0]->type == AST_BASIC_TYPE) {
-                const char* base_type_name = ast_get_string(base_type->children[0], "type");
-                if (strcmp(base_type_name, "Int") == 0) {
-                    c_type = "int";
-                } else if (strcmp(base_type_name, "Float") == 0) {
-                    c_type = "double";
-                } else if (strcmp(base_type_name, "String") == 0) {
-                    c_type = "char*";
-                } else if (strcmp(base_type_name, "Bool") == 0) {
-                    c_type = "int";
-                }
-            }
-        } else if (base_type->type == AST_BASIC_TYPE) {
-            const char* base_type_name = ast_get_string(base_type, "type");
-            if (strcmp(base_type_name, "Int") == 0) {
-                c_type = "int";
-            } else if (strcmp(base_type_name, "Float") == 0) {
-                c_type = "double";
-            } else if (strcmp(base_type_name, "String") == 0) {
-                c_type = "char*";
-            } else if (strcmp(base_type_name, "Bool") == 0) {
-                c_type = "int";
-            }
+  }
+
+  fprintf(file, "*/\n");
+
+  // Define the base C type as a typedef
+  const char *c_type = "void";
+  if (type_decl->child_count > 0) {
+    ast_node_t *base_type = type_decl->children[0];
+
+    if (base_type->type == AST_MEANING_TYPE && base_type->child_count > 0) {
+      if (base_type->children[0]->type == AST_BASIC_TYPE) {
+        const char *base_type_name =
+            ast_get_string(base_type->children[0], "type");
+        if (strcmp(base_type_name, "Int") == 0) {
+          c_type = "int";
+        } else if (strcmp(base_type_name, "Float") == 0) {
+          c_type = "double";
+        } else if (strcmp(base_type_name, "String") == 0) {
+          c_type = "char*";
+        } else if (strcmp(base_type_name, "Bool") == 0) {
+          c_type = "int";
         }
+      }
+    } else if (base_type->type == AST_BASIC_TYPE) {
+      const char *base_type_name = ast_get_string(base_type, "type");
+      if (strcmp(base_type_name, "Int") == 0) {
+        c_type = "int";
+      } else if (strcmp(base_type_name, "Float") == 0) {
+        c_type = "double";
+      } else if (strcmp(base_type_name, "String") == 0) {
+        c_type = "char*";
+      } else if (strcmp(base_type_name, "Bool") == 0) {
+        c_type = "int";
+      }
     }
-    
-    fprintf(file, "typedef %s %s;\n\n", c_type, type_name);
-    
-    return 1;
+  }
+
+  fprintf(file, "typedef %s %s;\n\n", c_type, type_name);
+
+  return 1;
 }
 
 /**
  * Generate code for a list of statements
- * 
+ *
  * @param stmt_list The statement list AST node
  * @param file The file to write to
  * @param indent The indentation level
  * @return 1 on success, 0 on error
  */
-static int generate_statement_list(ast_node_t* stmt_list, FILE* file, int indent) {
-    if (!stmt_list || !file) return 0;
-    
-    for (int i = 0; i < stmt_list->child_count; i++) {
-        if (!generate_statement(stmt_list->children[i], file, indent)) {
-            ERROR("Failed to generate statement");
-            return 0;
-        }
+static int generate_statement_list(ast_node_t *stmt_list, FILE *file,
+                                   int indent) {
+  if (!stmt_list || !file)
+    return 0;
+
+  for (int i = 0; i < stmt_list->child_count; i++) {
+    if (!generate_statement(stmt_list->children[i], file, indent)) {
+      ERROR("Failed to generate statement");
+      return 0;
     }
-    
-    return 1;
+  }
+
+  return 1;
 }
 
 /**
  * Generate code for a statement
- * 
+ *
  * @param stmt The statement AST node
  * @param file The file to write to
  * @param indent The indentation level
  * @return 1 on success, 0 on error
  */
-static int generate_statement(ast_node_t* stmt, FILE* file, int indent) {
-    if (!stmt || !file) return 0;
-    
-    switch (stmt->type) {
-        case AST_VAR_DECL: {
-            const char* var_name = ast_get_string(stmt, "name");
-            if (!var_name) {
-                ERROR("Variable name not found");
-                return 0;
-            }
-            
-            // Find initialization expression first
-            ast_node_t* init_expr = NULL;
-            const char* var_type = NULL;
-            const char* c_type = NULL;
-            
-            // Try to find explicit type annotation first
-            for (int i = 0; i < stmt->child_count; i++) {
-                if (stmt->children[i]->type == AST_BASIC_TYPE) {
-                    var_type = ast_get_string(stmt->children[i], "type");
-                    break;
-                }
-            }
-            
-            // Find the initialization expression
-            for (int i = 0; i < stmt->child_count; i++) {
-                if (stmt->children[i]->type != AST_BASIC_TYPE) {
-                    init_expr = stmt->children[i];
-                    break;
-                }
-            }
-            
-            // If we have an initialization expression but no explicit type,
-            // try to infer the type from the expression
-            if (init_expr && !var_type) {
-                // Handle common expression types for type inference
-                switch (init_expr->type) {
-                    case AST_STRING_LITERAL:
-                        var_type = "String";
-                        break;
-                    case AST_INT_LITERAL:
-                        var_type = "Int";
-                        break;
-                    case AST_FLOAT_LITERAL:
-                        var_type = "Float";
-                        break;
-                    case AST_BOOL_LITERAL:
-                        var_type = "Bool";
-                        break;
-                    case AST_IDENTIFIER:
-                        // For identifiers (variables), use the same type as the source variable
-                        // This is a simple approach - in a real compiler we'd look up the symbol table
-                        var_type = "String"; // Default assumption for this example
-                        
-                        // Common case: assignment from function parameter
-                        const char* id_name = ast_get_string(init_expr, "name");
-                        if (id_name && (strcmp(id_name, "city") == 0 || strcmp(id_name, "day") == 0)) {
-                            var_type = "String";
-                        }
-                        break;
-                    default:
-                        var_type = "unknown"; // Fallback
-                        break;
-                }
-            }
-            
-            // Map VibeLanguage types to C types
-            if (!var_type || strcmp(var_type, "unknown") == 0) {
-                // If we still don't have a type, use a safer default
-                c_type = "void*"; // Void pointer as last resort
-            } else if (strcmp(var_type, "Int") == 0) {
-                c_type = "int";
-            } else if (strcmp(var_type, "Float") == 0) {
-                c_type = "double";
-            } else if (strcmp(var_type, "String") == 0) {
-                c_type = "const char*";  // String parameters are const char*
-            } else if (strcmp(var_type, "Bool") == 0) {
-                c_type = "int";  // C's bool equivalent
-            } else {
-                // For custom or meaning types
-                c_type = var_type;
-            }
-            
-            add_indent(file, indent);
-            fprintf(file, "%s %s = ", c_type, var_name);
-            
-            if (init_expr) {
-                if (!generate_expression(init_expr, file)) {
-                    ERROR("Failed to generate initialization expression");
-                    return 0;
-                }
-            } else {
-                // Default initialization based on the type
-                if (strcmp(c_type, "int") == 0) {
-                    fprintf(file, "0");
-                } else if (strcmp(c_type, "double") == 0) {
-                    fprintf(file, "0.0");
-                } else if (strcmp(c_type, "const char*") == 0) {
-                    fprintf(file, "\"\"");
-                } else if (strcmp(c_type, "void*") == 0) {
-                    fprintf(file, "NULL");
-                } else {
-                    fprintf(file, "0");  // Default for unknown types
-                }
-            }
-            
-            fprintf(file, ";\n");
-            return 1;
-        }
-            
-        case AST_RETURN_STMT: {
-            add_indent(file, indent);
-            fprintf(file, "return");
-            
-            if (stmt->child_count > 0) {
-                fprintf(file, " ");
-                if (!generate_expression(stmt->children[0], file)) {
-                    ERROR("Failed to generate return expression");
-                    return 0;
-                }
-            }
-            
-            fprintf(file, ";\n");
-            return 1;
-        }
-            
-        case AST_PROMPT_BLOCK: {
-            return generate_prompt_block(stmt, file);
-        }
-            
-        case AST_EXPR_STMT: {
-            add_indent(file, indent);
-            if (stmt->child_count > 0) {
-                if (!generate_expression(stmt->children[0], file)) {
-                    ERROR("Failed to generate expression statement");
-                    return 0;
-                }
-            }
-            
-            fprintf(file, ";\n");
-            return 1;
-        }
-            
-        case AST_BLOCK: {
-            add_indent(file, indent);
-            fprintf(file, "{\n");
-            
-            if (!generate_statement_list(stmt, file, indent + 1)) {
-                ERROR("Failed to generate block statements");
-                return 0;
-            }
-            
-            add_indent(file, indent);
-            fprintf(file, "}\n");
-            return 1;
-        }
-            
-        default:
-            WARN("Unsupported statement type: %d", stmt->type);
-            add_indent(file, indent);
-            fprintf(file, "/* Unsupported statement type */\n");
-            return 1;
+static int generate_statement(ast_node_t *stmt, FILE *file, int indent) {
+  if (!stmt || !file)
+    return 0;
+
+  switch (stmt->type) {
+  case AST_VAR_DECL: {
+    const char *var_name = ast_get_string(stmt, "name");
+    if (!var_name) {
+      ERROR("Variable name not found");
+      return 0;
     }
+
+    // Determine variable type
+    const char *var_type = NULL;
+    ast_node_t *type_node = NULL;
+    for (int i = 0; i < stmt->child_count; i++) {
+      if (stmt->children[i]->type == AST_BASIC_TYPE) {
+        var_type = ast_get_string(stmt->children[i], "type");
+        type_node = stmt->children[i];
+        break;
+      }
+    }
+
+    // Map VibeLanguage types to C types
+    const char *c_type = NULL;
+    if (var_type == NULL) {
+      // If no explicit type, try to infer from the initialization expression
+      ast_node_t *init_expr = NULL;
+      for (int i = 0; i < stmt->child_count; i++) {
+        if (stmt->children[i]->type != AST_BASIC_TYPE) {
+          init_expr = stmt->children[i];
+          break;
+        }
+      }
+
+      if (init_expr) {
+        // Try to infer the type from the expression
+        switch (init_expr->type) {
+        case AST_STRING_LITERAL:
+          c_type = "const char*";
+          break;
+        case AST_INT_LITERAL:
+          c_type = "int";
+          break;
+        case AST_FLOAT_LITERAL:
+          c_type = "double";
+          break;
+        case AST_BOOL_LITERAL:
+          c_type = "int";
+          break;
+        case AST_IDENTIFIER: {
+          // For identifiers (variables), try to determine the type from context
+          // For variables assigned from parameters, check parameter types
+          const char *id_name = ast_get_string(init_expr, "name");
+          if (id_name &&
+              (strcmp(id_name, "city") == 0 || strcmp(id_name, "day") == 0)) {
+            c_type = "const char*";
+          } else {
+            c_type = "void*"; // Default if can't determine
+          }
+          break;
+        }
+        default:
+          c_type = "void*"; // Default for unknown expressions
+          break;
+        }
+      } else {
+        c_type = "void*"; // Default for no initialization
+      }
+    } else {
+      // Use explicitly specified type
+      if (strcmp(var_type, "Int") == 0) {
+        c_type = "int";
+      } else if (strcmp(var_type, "Float") == 0) {
+        c_type = "double";
+      } else if (strcmp(var_type, "String") == 0) {
+        c_type = "const char*";
+      } else if (strcmp(var_type, "Bool") == 0) {
+        c_type = "int";
+      } else {
+        c_type = var_type; // Use the type name directly
+      }
+    }
+
+    // Find initialization expression
+    ast_node_t *init_expr = NULL;
+    for (int i = 0; i < stmt->child_count; i++) {
+      if (stmt->children[i]->type != AST_BASIC_TYPE) {
+        init_expr = stmt->children[i];
+        break;
+      }
+    }
+
+    add_indent(file, indent);
+    fprintf(file, "%s %s = ", c_type, var_name);
+
+    if (init_expr) {
+      if (!generate_expression(init_expr, file)) {
+        ERROR("Failed to generate initialization expression");
+        return 0;
+      }
+    } else {
+      // Default initialization based on the type
+      if (strcmp(c_type, "int") == 0) {
+        fprintf(file, "0");
+      } else if (strcmp(c_type, "double") == 0) {
+        fprintf(file, "0.0");
+      } else if (strcmp(c_type, "const char*") == 0 ||
+                 strcmp(c_type, "char*") == 0) {
+        fprintf(file, "\"\"");
+      } else if (strcmp(c_type, "void*") == 0) {
+        fprintf(file, "NULL");
+      } else {
+        fprintf(file, "0"); // Default for unknown types
+      }
+    }
+
+    fprintf(file, ";\n");
+    return 1;
+  }
+
+  case AST_RETURN_STMT: {
+    add_indent(file, indent);
+    fprintf(file, "return");
+
+    if (stmt->child_count > 0) {
+      fprintf(file, " ");
+      if (!generate_expression(stmt->children[0], file)) {
+        ERROR("Failed to generate return expression");
+        return 0;
+      }
+    }
+
+    fprintf(file, ";\n");
+    return 1;
+  }
+
+  case AST_PROMPT_BLOCK: {
+    return generate_prompt_block(stmt, file, indent);
+  }
+
+  case AST_EXPR_STMT: {
+    add_indent(file, indent);
+    if (stmt->child_count > 0) {
+      if (!generate_expression(stmt->children[0], file)) {
+        ERROR("Failed to generate expression statement");
+        return 0;
+      }
+    }
+
+    fprintf(file, ";\n");
+    return 1;
+  }
+
+  case AST_BLOCK: {
+    add_indent(file, indent);
+    fprintf(file, "{\n");
+
+    if (!generate_statement_list(stmt, file, indent + 1)) {
+      ERROR("Failed to generate block statements");
+      return 0;
+    }
+
+    add_indent(file, indent);
+    fprintf(file, "}\n");
+    return 1;
+  }
+
+  default:
+    WARN("Unsupported statement type: %d", stmt->type);
+    add_indent(file, indent);
+    fprintf(file, "/* Unsupported statement type */\n");
+    return 1;
+  }
 }
 
 /**
  * Generate code for the prompt block
- * 
+ *
  * @param prompt The prompt block AST node
  * @param file The file to write to
+ * @param indent The indentation level
  * @return 1 on success, 0 on error
  */
-static int generate_prompt_block(ast_node_t* prompt, FILE* file) {
-    if (!prompt || !file) return 0;
-    
-    const char* template_str = ast_get_string(prompt, "template");
-    if (!template_str) {
-        ERROR("Prompt template not found");
-        return 0;
-    }
-    
-    // Extract variables from the template
-    int var_count = 0;
-    char** variables = extract_variables(template_str, &var_count);
-    
-    // Generate code to call the LLM API
-    fprintf(file, "    {\n");
-    fprintf(file, "        // Prompt block: \"%s\"\n", template_str);
-    fprintf(file, "        const char* prompt_template = \"%s\";\n", template_str);
-    fprintf(file, "        int var_count = %d;\n", var_count);
-    fprintf(file, "        char** var_names = malloc(sizeof(char*) * var_count);\n");
-    fprintf(file, "        char** var_values = malloc(sizeof(char*) * var_count);\n");
-    
-    // Initialize variable names and values
-    if (variables) {
-        for (int i = 0; i < var_count; i++) {
-            fprintf(file, "        var_names[%d] = \"%s\";\n", i, variables[i]);
-            fprintf(file, "        var_values[%d] = %s ? strdup(%s) : strdup(\"\");\n", i, variables[i], variables[i]);
+static int generate_prompt_block(ast_node_t *prompt, FILE *file, int indent) {
+  if (!prompt || !file)
+    return 0;
+
+  const char *template_str = ast_get_string(prompt, "template");
+  if (!template_str) {
+    ERROR("Prompt template not found");
+    return 0;
+  }
+
+  // Extract variables from the template
+  int var_count = 0;
+  char **variables = extract_variables(template_str, &var_count);
+
+  // Get the expected return type from the parent function
+  const char *return_type = "char*"; // Default to string
+  ast_node_t *parent = prompt->parent;
+  while (parent && parent->type != AST_FUNCTION_DECL) {
+    parent = parent->parent;
+  }
+
+  if (parent && parent->type == AST_FUNCTION_DECL) {
+    // Look for the return type in the function declaration
+    for (int i = 0; i < parent->child_count; i++) {
+      if (parent->children[i]->type == AST_BASIC_TYPE) {
+        const char *type_name = ast_get_string(parent->children[i], "type");
+        if (strcmp(type_name, "Int") == 0) {
+          return_type = "int";
+        } else if (strcmp(type_name, "Float") == 0) {
+          return_type = "double";
+        } else if (strcmp(type_name, "Bool") == 0) {
+          return_type = "int";
         }
-    }
-    
-    // Format the prompt and call the LLM API
-    fprintf(file, "        char* formatted_prompt = format_prompt(prompt_template, var_names, var_values, var_count);\n");
-    fprintf(file, "        VibeValue* prompt_result = vibe_execute_prompt(formatted_prompt, \"%s\");\n", template_str);
-    fprintf(file, "        \n");
-    fprintf(file, "        // Free resources\n");
-    fprintf(file, "        free(formatted_prompt);\n");
-    fprintf(file, "        for (int i = 0; i < var_count; i++) {\n");
-    fprintf(file, "            free(var_values[i]);\n");
-    fprintf(file, "        }\n");
-    fprintf(file, "        free(var_names);\n");
-    fprintf(file, "        free(var_values);\n");
-    fprintf(file, "        \n");
-    fprintf(file, "        // Return the result\n");
-    fprintf(file, "        return vibe_value_get_string(prompt_result);\n");
-    fprintf(file, "    }\n");
-    
-    // Free the extracted variables
-    if (variables) {
-        for (int i = 0; i < var_count; i++) {
-            free(variables[i]);
+        // String remains the default "char*"
+        break;
+      } else if (parent->children[i]->type == AST_MEANING_TYPE) {
+        // For Meaning types, use the base type
+        ast_node_t *meaning_type = parent->children[i];
+        if (meaning_type->child_count > 0) {
+          const char *base_type =
+              ast_get_string(meaning_type->children[0], "type");
+          if (strcmp(base_type, "Int") == 0) {
+            return_type = "int";
+          } else if (strcmp(base_type, "Float") == 0) {
+            return_type = "double";
+          } else if (strcmp(base_type, "Bool") == 0) {
+            return_type = "int";
+          }
+          // String remains the default "char*"
         }
-        free(variables);
+        break;
+      }
     }
-    
-    return 1;
+  }
+
+  // Generate code to call the LLM API
+  add_indent(file, indent);
+  fprintf(file, "{\n");
+  add_indent(file, indent + 1);
+  fprintf(file, "// Prompt block: \"%s\"\n", template_str);
+  add_indent(file, indent + 1);
+  fprintf(file, "const char* prompt_template = \"%s\";\n", template_str);
+  add_indent(file, indent + 1);
+  fprintf(file, "int var_count = %d;\n", var_count);
+  add_indent(file, indent + 1);
+  fprintf(file, "char** var_names = malloc(sizeof(char*) * var_count);\n");
+  add_indent(file, indent + 1);
+  fprintf(file, "char** var_values = malloc(sizeof(char*) * var_count);\n");
+
+  // Initialize variable names and values
+  if (variables) {
+    for (int i = 0; i < var_count; i++) {
+      add_indent(file, indent + 1);
+      fprintf(file, "var_names[%d] = \"%s\";\n", i, variables[i]);
+      add_indent(file, indent + 1);
+      fprintf(file, "var_values[%d] = %s ? strdup(%s) : strdup(\"\");\n", i,
+              variables[i], variables[i]);
+    }
+  }
+
+  // Format the prompt and call the LLM API
+  add_indent(file, indent + 1);
+  fprintf(file, "char* formatted_prompt = format_prompt(prompt_template, "
+                "var_names, var_values, var_count);\n");
+  add_indent(file, indent + 1);
+  fprintf(file,
+          "VibeValue* prompt_result = vibe_execute_prompt(formatted_prompt, "
+          "\"%s\");\n",
+          template_str);
+  add_indent(file, indent + 1);
+  fprintf(file, "\n");
+  add_indent(file, indent + 1);
+  fprintf(file, "// Free resources\n");
+  add_indent(file, indent + 1);
+  fprintf(file, "free(formatted_prompt);\n");
+  add_indent(file, indent + 1);
+  fprintf(file, "for (int i = 0; i < var_count; i++) {\n");
+  add_indent(file, indent + 2);
+  fprintf(file, "free(var_values[i]);\n");
+  add_indent(file, indent + 1);
+  fprintf(file, "}\n");
+  add_indent(file, indent + 1);
+  fprintf(file, "free(var_names);\n");
+  add_indent(file, indent + 1);
+  fprintf(file, "free(var_values);\n");
+  add_indent(file, indent + 1);
+  fprintf(file, "\n");
+
+  // Return the result with proper type conversion
+  add_indent(file, indent + 1);
+  fprintf(file, "// Return the result\n");
+  add_indent(file, indent + 1);
+
+  // Convert the result to the appropriate return type
+  if (strcmp(return_type, "int") == 0) {
+    fprintf(file, "return vibe_value_get_int(prompt_result);\n");
+  } else if (strcmp(return_type, "double") == 0) {
+    fprintf(file, "return vibe_value_get_float(prompt_result);\n");
+  } else if (strcmp(return_type, "int") == 0 &&
+             strstr(return_type, "Bool") != NULL) {
+    fprintf(file, "return vibe_value_get_bool(prompt_result);\n");
+  } else {
+    // Default to string
+    fprintf(file, "return vibe_value_get_string(prompt_result);\n");
+  }
+
+  add_indent(file, indent);
+  fprintf(file, "}\n");
+
+  // Free the extracted variables
+  if (variables) {
+    for (int i = 0; i < var_count; i++) {
+      free(variables[i]);
+    }
+    free(variables);
+  }
+
+  return 1;
 }
 
 /**
  * Generate code for an expression
- * 
+ *
  * @param expr The expression AST node
  * @param file The file to write to
  * @return 1 on success, 0 on error
  */
-static int generate_expression(ast_node_t* expr, FILE* file) {
-    if (!expr || !file) return 0;
-    
-    switch (expr->type) {
-        case AST_INT_LITERAL: {
-            int value = ast_get_int(expr, "value");
-            fprintf(file, "%d", value);
-            return 1;
-        }
-            
-        case AST_FLOAT_LITERAL: {
-            double value = ast_get_float(expr, "value");
-            fprintf(file, "%f", value);
-            return 1;
-        }
-            
-        case AST_STRING_LITERAL: {
-            const char* value = ast_get_string(expr, "value");
-            fprintf(file, "\"%s\"", value ? value : "");
-            return 1;
-        }
-            
-        case AST_BOOL_LITERAL: {
-            int value = ast_get_bool(expr, "value");
-            fprintf(file, "%s", value ? "1" : "0");
-            return 1;
-        }
-            
-        case AST_IDENTIFIER: {
-            const char* name = ast_get_string(expr, "name");
-            fprintf(file, "%s", name ? name : "unknown_identifier");
-            return 1;
-        }
-            
-        case AST_CALL_EXPR: {
-            const char* func_name = ast_get_string(expr, "function");
-            fprintf(file, "%s(", func_name ? func_name : "unknown_function");
-            
-            // Generate arguments
-            for (int i = 0; i < expr->child_count; i++) {
-                if (!generate_expression(expr->children[i], file)) {
-                    ERROR("Failed to generate call argument");
-                    return 0;
-                }
-                
-                if (i < expr->child_count - 1) {
-                    fprintf(file, ", ");
-                }
-            }
-            
-            fprintf(file, ")");
-            return 1;
-        }
-            
-        default:
-            WARN("Unsupported expression type: %d", expr->type);
-            fprintf(file, "/* Unsupported expression */");
-            return 1;
+static int generate_expression(ast_node_t *expr, FILE *file) {
+  if (!expr || !file)
+    return 0;
+
+  switch (expr->type) {
+  case AST_INT_LITERAL: {
+    int value = ast_get_int(expr, "value");
+    fprintf(file, "%d", value);
+    return 1;
+  }
+
+  case AST_FLOAT_LITERAL: {
+    double value = ast_get_float(expr, "value");
+    fprintf(file, "%f", value);
+    return 1;
+  }
+
+  case AST_STRING_LITERAL: {
+    const char *value = ast_get_string(expr, "value");
+    fprintf(file, "\"%s\"", value ? value : "");
+    return 1;
+  }
+
+  case AST_BOOL_LITERAL: {
+    int value = ast_get_bool(expr, "value");
+    fprintf(file, "%s", value ? "1" : "0");
+    return 1;
+  }
+
+  case AST_IDENTIFIER: {
+    const char *name = ast_get_string(expr, "name");
+    fprintf(file, "%s", name ? name : "unknown_identifier");
+    return 1;
+  }
+
+  case AST_CALL_EXPR: {
+    const char *func_name = ast_get_string(expr, "function");
+    fprintf(file, "%s(", func_name ? func_name : "unknown_function");
+
+    // Generate arguments
+    for (int i = 0; i < expr->child_count; i++) {
+      if (!generate_expression(expr->children[i], file)) {
+        ERROR("Failed to generate call argument");
+        return 0;
+      }
+
+      if (i < expr->child_count - 1) {
+        fprintf(file, ", ");
+      }
     }
+
+    fprintf(file, ")");
+    return 1;
+  }
+
+  default:
+    WARN("Unsupported expression type: %d", expr->type);
+    fprintf(file, "/* Unsupported expression */");
+    return 1;
+  }
 }
