@@ -31,7 +31,7 @@ test: build
 # Run tests with verbose output
 .PHONY: test-verbose
 test-verbose: build
-	@cd $(BUILD_DIR) && ctest -V
+	@cd $(BUILD_DIR) && ctest --output-on-failure --verbose --rerun-failed 
 
 # Generate parser (Flex/Bison) files
 .PHONY: parser

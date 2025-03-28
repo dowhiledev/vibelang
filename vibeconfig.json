@@ -1,9 +1,9 @@
 {
   "global": {
     "provider": "OpenAI",
-    "api_key": "your-api-key",
+    "api_key": "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",
     "default_params": {
-      "model": "gpt-4",
+      "model": "gpt-3.5-turbo",
       "temperature": 0.7,
       "max_tokens": 150
     }
@@ -13,8 +13,9 @@
       "temperature": 0.5,
       "max_tokens": 100
     },
-    "greet": {
-      "temperature": 0.9
+    "getForecast": {
+      "temperature": 0.7,
+      "max_tokens": 250
     }
   }
 }
