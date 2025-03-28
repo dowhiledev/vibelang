@@ -5,6 +5,7 @@
 
 #include "../utils/ast.h"
 #include "parser_utils.h"
+#include "parser_internal.h"
 
 // Use YY_CTX_LOCAL to avoid thread-local context issues
 #define YY_CTX_LOCAL 1
@@ -30,3 +31,19 @@ void vibe_destroy(vibe_context_t *ctx);
 #endif
 
 #endif /* !PCC_INCLUDED_PARSER_H */
+
+/**
+ * Parser interface header for Vibe language compiler.
+ * This file serves as a compatibility layer for code that was using the old parser.h
+ */
+
+#ifndef PARSER_H
+#define PARSER_H
+
+#include "../utils/ast.h"
+#include "parser_utils.h"
+
+// Forward declarations for common parser functions
+ast_node_t* parse_string(const char* source);
+
+#endif /* PARSER_H */

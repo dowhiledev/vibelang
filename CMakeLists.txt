@@ -5,139 +5,131 @@ project(vibelang VERSION 0.1.0 LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-# macOS specific settings for SDK path and deployment target
-if(APPLE)
-    execute_process(
-        COMMAND xcrun --show-sdk-path
-        OUTPUT_VARIABLE MACOS_SDK_PATH
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    # Remove any leading/trailing whitespace that might cause issues
-    string(STRIP "${MACOS_SDK_PATH}" MACOS_SDK_PATH)
-    set(CMAKE_OSX_SYSROOT "${MACOS_SDK_PATH}")
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum macOS deployment version")
+# Set default build type to Debug if not specified
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug)
 endif()
+
+# Enable testing
+enable_testing()
+include(CTest)
+
+# Output directories
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Find required packages
 find_package(CURL REQUIRED)
-find_package(cJSON REQUIRED)
-
-# Include directories
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-include_directories(${CURL_INCLUDE_DIRS})
-include_directories(${CJSON_INCLUDE_DIRS})
-
-# Add PackCC as an external dependency, with direct compiler command
-include(ExternalProject)
-ExternalProject_Add(
-    packcc
-    GIT_REPOSITORY https://github.com/arithy/packcc.git
-    GIT_TAG main
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/packcc
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ${CMAKE_C_COMPILER} -isysroot "${MACOS_SDK_PATH}" -o <BINARY_DIR>/packcc <SOURCE_DIR>/src/packcc.c
-    BUILD_IN_SOURCE 0
-    INSTALL_COMMAND ""
-    BUILD_BYPRODUCTS <BINARY_DIR>/packcc
-)
-ExternalProject_Get_Property(packcc BINARY_DIR)
-set(PACKCC_EXECUTABLE ${BINARY_DIR}/packcc)
-
-# Generate parser from grammar
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/compiler/parser.c ${CMAKE_CURRENT_SOURCE_DIR}/src/compiler/parser.h
-    COMMAND ${PACKCC_EXECUTABLE} -o ${CMAKE_CURRENT_SOURCE_DIR}/src/compiler/parser ${CMAKE_CURRENT_SOURCE_DIR}/src/compiler/grammar.peg
-    DEPENDS packcc ${CMAKE_CURRENT_SOURCE_DIR}/src/compiler/grammar.peg
-    COMMENT "Generating parser from grammar"
-)
-
-# Source files
-set(COMPILER_SOURCES
-    src/compiler/lexer.c
-    src/compiler/parser.c
-    src/compiler/parser_utils.c
-    src/compiler/semantic.c
-    src/compiler/codegen.c
-    src/compiler/symbol_table.c
-)
-
-set(RUNTIME_SOURCES
-    src/runtime/runtime.c
-    src/runtime/llm_interface.c
-    src/runtime/config.c
-)
-
-set(UTILS_SOURCES
-    src/utils/file_utils.c
-    src/utils/cache_utils.c
-    src/utils/log_utils.c
-    src/utils/ast.c
-)
-
-# Targets
-add_library(vibelang_compiler STATIC ${COMPILER_SOURCES})
-add_library(vibelang_runtime STATIC ${RUNTIME_SOURCES})
-add_library(vibelang_utils STATIC ${UTILS_SOURCES})
-
-# Add compile flag to limit recursion depth in the parser
-target_compile_definitions(vibelang_compiler PRIVATE 
-    PCC_STACK_MAX_SIZE=1000 
-    PCC_MAX_REPETITION=1000
-)
-
-# Set up parser debugging
-target_compile_definitions(vibelang_compiler PRIVATE 
-    PCC_DEBUG_ENABLED=1
-)
-
-# Add pthread for timeout handling on Unix systems
-if(UNIX AND NOT APPLE)
-    set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
-    set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-    find_package(Threads REQUIRED)
-    target_link_libraries(vibelang_utils PRIVATE Threads::Threads)
-elseif(APPLE)
-    target_link_libraries(vibelang_utils PRIVATE "-pthread")
+if(CURL_FOUND)
+  include_directories(${CURL_INCLUDE_DIRS})
+else()
+  message(FATAL_ERROR "Could not find libcurl. Please install libcurl development package.")
 endif()
 
-target_link_libraries(vibelang_runtime 
-    ${CURL_LIBRARIES}
-    ${CJSON_LIBRARIES}
-    dl  # For dynamic loading
+# Flex and Bison output directories
+set(FLEX_OUTPUT_DIR ${CMAKE_BINARY_DIR}/flex)
+set(BISON_OUTPUT_DIR ${CMAKE_BINARY_DIR}/bison)
+file(MAKE_DIRECTORY ${FLEX_OUTPUT_DIR} ${BISON_OUTPUT_DIR})
+
+# Include directories
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
+  ${CMAKE_CURRENT_SOURCE_DIR}/vendor/cjson  
+  ${FLEX_OUTPUT_DIR}
+  ${BISON_OUTPUT_DIR}
 )
 
-# Main shared library
+# Check for system cJSON or use our own
+find_library(CJSON_LIBRARY NAMES cjson)
+find_path(CJSON_INCLUDE_DIR NAMES cJSON.h)
+
+if(CJSON_LIBRARY AND CJSON_INCLUDE_DIR)
+  message(STATUS "Using system cJSON: ${CJSON_LIBRARY}")
+  set(CJSON_LIBRARIES ${CJSON_LIBRARY})
+  include_directories(${CJSON_INCLUDE_DIR})
+else()
+  message(STATUS "Using bundled cJSON")
+  # Add our own cJSON implementation
+  add_library(cjson STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/vendor/cjson/cJSON.c
+  )
+  set(CJSON_LIBRARIES cjson)
+  # Include directory already added above
+endif()
+
+# Add internal libraries
+add_library(vibelang_utils STATIC
+  src/utils/ast.c
+  src/utils/log_utils.c
+  src/utils/file_utils.c
+  src/utils/cache_utils.c
+)
+
+add_library(vibelang_runtime STATIC
+  src/runtime/config.c
+  src/runtime/runtime.c
+  src/runtime/llm_interface.c
+)
+
+# Add compiler library
+add_library(vibelang_compiler STATIC
+  src/compiler/parser_utils.c
+  src/compiler/parser_impl.c
+  src/compiler/symbol_table.c
+  src/compiler/semantic.c
+  src/compiler/codegen.c
+)
+
+# Include the compiler-specific CMake configuration
+add_subdirectory(src/compiler)
+
+# Add main library
 add_library(vibelang SHARED
-    src/vibelang.c
+  src/vibelang.c
 )
 
-target_link_libraries(vibelang
-    vibelang_compiler
-    vibelang_runtime
-    vibelang_utils
-    m  # Math library
+# Add dependencies
+target_link_libraries(vibelang_utils PRIVATE ${CJSON_LIBRARIES})
+target_link_libraries(vibelang_runtime PRIVATE vibelang_utils ${CJSON_LIBRARIES} ${CURL_LIBRARIES})
+target_link_libraries(vibelang_compiler PRIVATE vibelang_utils)
+target_link_libraries(vibelang PUBLIC 
+  vibelang_utils 
+  vibelang_runtime 
+  vibelang_compiler 
+  ${CJSON_LIBRARIES}
+  ${CURL_LIBRARIES}
 )
 
-# Compiler tool
+# Add vibec executable
 add_executable(vibec
-    src/tools/vibec.c
+  src/tools/vibec.c
 )
 
-target_link_libraries(vibec
-    vibelang_compiler
-    vibelang_utils
-)
+# IMPORTANT: Link vibec AFTER defining the executable
+target_link_libraries(vibec PUBLIC vibelang)
 
-# Installation
-install(TARGETS vibelang vibec
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin
-)
-
-install(DIRECTORY include/
-    DESTINATION include
-)
-
-# Testing
-enable_testing()
+# Add test subdirectory
 add_subdirectory(tests)
+
+# On macOS we need to use different linking options
+if(APPLE)
+  # This ensures symbols from static libraries are properly exported
+  set_target_properties(vibelang PROPERTIES 
+    LINK_FLAGS "-Wl,-all_load"
+    MACOSX_RPATH TRUE
+  )
+endif()
+
+# Installation targets
+install(TARGETS vibelang vibec
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+)
+
+install(FILES include/vibelang.h include/runtime.h
+  DESTINATION include
+)
