@@ -19,6 +19,17 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# Set RPATH settings for proper runtime library resolution
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+if(APPLE)
+  # On macOS, also add the executable directory to RPATH
+  set(CMAKE_INSTALL_RPATH "@executable_path;@executable_path/../lib;${CMAKE_INSTALL_RPATH}")
+  # Ensure executables look in their directory for dynamic libraries
+  set(CMAKE_INSTALL_NAME_DIR "@rpath")
+  set(CMAKE_BUILD_WITH_INSTALL_NAME_DIR TRUE)
+endif()
+
 # Find required packages
 find_package(CURL REQUIRED)
 if(CURL_FOUND)
@@ -111,17 +122,22 @@ add_executable(vibec
 # IMPORTANT: Link vibec AFTER defining the executable
 target_link_libraries(vibec PUBLIC vibelang)
 
-# Add test subdirectory
-add_subdirectory(tests)
-
-# On macOS we need to use different linking options
+# On macOS, set the proper RPATH for the executable
 if(APPLE)
-  # This ensures symbols from static libraries are properly exported
+  set_target_properties(vibec PROPERTIES
+    INSTALL_RPATH "@executable_path;@executable_path/../lib"
+    BUILD_WITH_INSTALL_RPATH TRUE
+  )
+  # Ensure proper linking of static libraries
   set_target_properties(vibelang PROPERTIES 
     LINK_FLAGS "-Wl,-all_load"
     MACOSX_RPATH TRUE
+    INSTALL_NAME_DIR "@rpath"
   )
 endif()
+
+# Add test subdirectory
+add_subdirectory(tests)
 
 # Installation targets
 install(TARGETS vibelang vibec
