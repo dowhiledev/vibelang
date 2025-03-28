@@ -1,0 +1,21 @@
+{
+  "global": {
+    "provider": "OpenAI",
+    "api_key": "YOUR_OPENAI_API_KEY_HERE",
+    "default_params": {
+      "model": "gpt-3.5-turbo",
+      "temperature": 0.7,
+      "max_tokens": 150
+    }
+  },
+  "overrides": {
+    "getTemperature": {
+      "temperature": 0.5,
+      "max_tokens": 100
+    },
+    "getForecast": {
+      "temperature": 0.7,
+      "max_tokens": 250
+    }
+  }
+}
