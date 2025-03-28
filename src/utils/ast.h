@@ -1,132 +1,120 @@
 #ifndef AST_H
 #define AST_H
 
-#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>  // Added for size_t definition
 
-// Maximum depth of AST nesting to prevent stack overflow
-#ifndef MAX_AST_DEPTH 
-#define MAX_AST_DEPTH 100
-#endif
+// Limits for runtime checks
+#define MAX_AST_DEPTH 1000
+#define MAX_AST_NODES 1000000
 
-// Maximum number of AST nodes to prevent memory exhaustion
-#ifndef MAX_AST_NODES
-#define MAX_AST_NODES 10000
-#endif
-
-// Forward declaration for ast types
-typedef enum ast_node_type_tag ast_node_type_t;
-typedef struct ast_node_tag ast_node_t;
-typedef struct ast_list_tag ast_list_t;
-
-// Reset AST metrics at the beginning of parsing
-void ast_reset_metrics();
-
-// Get current AST metrics for diagnostics
-void ast_get_metrics(int* depth, int* count);
-
-/**
- * Print AST node structure with indentation
- * @param node The AST node to print
- * @param indent The current indentation level
- */
-void ast_print(const ast_node_t* node, int indent);
-
-// Enumeration of AST node types
-enum ast_node_type_tag {
+// AST node types for the Vibe language
+typedef enum ast_node_type_t {
     AST_PROGRAM,
     AST_FUNCTION_DECL,
     AST_FUNCTION_BODY,
-    AST_PARAM_LIST,
-    AST_PARAMETER,
     AST_TYPE_DECL,
+    AST_VAR_DECL,
     AST_BASIC_TYPE,
     AST_MEANING_TYPE,
+    AST_PARAM_LIST, 
+    AST_PARAMETER,  
     AST_CLASS_DECL,
-    AST_MEMBER_VAR,
+    AST_CLASS_BODY, 
+    AST_MEMBER_VAR, 
     AST_IMPORT,
-    AST_BLOCK,
-    AST_VAR_DECL,
+    AST_BLOCK,      
+    AST_EXPR_STMT,  
     AST_RETURN_STMT,
     AST_PROMPT_BLOCK,
-    AST_EXPR_STMT,
-    AST_CALL_EXPR,
     AST_STRING_LITERAL,
     AST_INT_LITERAL,
     AST_FLOAT_LITERAL,
     AST_BOOL_LITERAL,
-    AST_IDENTIFIER
-};
+    AST_IDENTIFIER,
+    AST_CALL_EXPR    
+} ast_node_type_t;
 
-// Enumeration of AST property value types
+// Forward declaration of AST node structure
+typedef struct ast_node_t ast_node_t;
+
+// Helper list structure for grammatical constructs that return lists
+typedef struct ast_list_t {
+    ast_node_t** list;
+    size_t len;
+} ast_list_t;
+
+// Helper array functions to work with the grammar
+#define pcc_array_length(a) ((a) ? (a)->len : 0)
+#define pcc_array_get(a, i) ((i) < pcc_array_length(a) ? (a)->list[i] : NULL)
+
+// Property types for AST nodes
 typedef enum {
-    AST_VAL_INT,
-    AST_VAL_FLOAT,
-    AST_VAL_BOOL,
-    AST_VAL_STRING,
-    AST_VAL_POINTER
-} ast_value_type_t;
+    AST_PROP_NONE,
+    AST_PROP_STRING,
+    AST_PROP_INT,
+    AST_PROP_FLOAT,
+    AST_PROP_BOOL
+} ast_prop_type_t;
 
-// Union for AST property values
-typedef union {
-    long long int_val;     // Changed from int to long long
-    double float_val;      // Changed from float to double
-    int bool_val;
-    char* str_val;
-    void* ptr_val;
-} ast_value_t;
-
-// Structure for AST property
-typedef struct {
-    char* key;
-    ast_value_type_t type;
-    ast_value_t val;
+// Property structure for AST nodes
+typedef struct ast_prop_t {
+    char* name;
+    ast_prop_type_t type;
+    union {
+        char* str_val;
+        int64_t int_val;
+        double float_val;
+        bool bool_val;
+    };
+    struct ast_prop_t* next;
 } ast_prop_t;
 
-// Structure for AST node
-struct ast_node_tag {
+// AST node structure - the basic building block of our syntax tree
+struct ast_node_t {
     ast_node_type_t type;
     
-    // Node properties (key-value pairs)
-    ast_prop_t* props;
-    size_t prop_count;
-    size_t prop_capacity;
+    // Properties (name-value pairs)
+    ast_prop_t* properties;
     
     // Child nodes
     ast_node_t** children;
-    size_t child_count;
-    size_t child_capacity;
+    int child_count;
+    int child_capacity;
     
     // Source location
     int line;
     int column;
+    
+    // Parent node (for traversal)
+    ast_node_t* parent;
 };
 
-// Structure for AST list (used by the parser)
-struct ast_list_tag {
-    ast_node_t** list;
-    size_t len;
-};
-
-// AST node creation and management
+// Functions for creating and managing AST nodes
 ast_node_t* create_ast_node(ast_node_type_t type);
 void ast_node_free(ast_node_t* node);
+
+// Functions for managing children
 void ast_add_child(ast_node_t* parent, ast_node_t* child);
+void ast_remove_child(ast_node_t* parent, int index);
+void ast_replace_child(ast_node_t* parent, int index, ast_node_t* new_child);
 
-// AST property management - update parameter types to match implementation
-void ast_set_int(ast_node_t* node, const char* key, long long value);
-void ast_set_float(ast_node_t* node, const char* key, double value);
-void ast_set_bool(ast_node_t* node, const char* key, int value);
-void ast_set_string(ast_node_t* node, const char* key, const char* value);
-void ast_set_pointer(ast_node_t* node, const char* key, void* value);
+// Functions for managing properties
+void ast_set_string(ast_node_t* node, const char* name, const char* value);
+void ast_set_int(ast_node_t* node, const char* name, int64_t value);
+void ast_set_float(ast_node_t* node, const char* name, double value);
+void ast_set_bool(ast_node_t* node, const char* name, bool value);
 
-// AST property access - update return and parameter types to match implementation
-long long ast_get_int(const ast_node_t* node, const char* key);
-double ast_get_float(const ast_node_t* node, const char* key);
-int ast_get_bool(const ast_node_t* node, const char* key);
-const char* ast_get_string(const ast_node_t* node, const char* key);
-void* ast_get_pointer(const ast_node_t* node, const char* key);
+const char* ast_get_string(const ast_node_t* node, const char* name);
+int64_t ast_get_int(const ast_node_t* node, const char* name);
+double ast_get_float(const ast_node_t* node, const char* name);
+bool ast_get_bool(const ast_node_t* node, const char* name);
 
-// AST serialization 
-char* ast_to_json(ast_node_t* node);
+// Debug and printing functions
+void ast_print(const ast_node_t* node);
+void ast_reset_metrics();
+void ast_get_metrics(int* depth, int* count);
+const char* ast_node_type_name(ast_node_type_t type);
 
 #endif /* AST_H */

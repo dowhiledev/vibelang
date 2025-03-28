@@ -1,213 +1,178 @@
 /**
- * VibeLang Public C API
- * 
- * This header defines the public interface for integrating with VibeLang
- * from C applications.
- *
  * @file vibelang.h
- * @author VibeLang Team
- * @version 0.1.0
+ * @brief Main public API for the VibeLanguage compiler and runtime
  */
 
 #ifndef VIBELANG_H
 #define VIBELANG_H
 
-#include <stddef.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/**
- * @brief Opaque structure representing a loaded VibeLang module
- */
-typedef struct VibeModule VibeModule;
+#include "ast.h"  // For ast_node_t
 
 /**
- * @brief Structure representing a value in VibeLang
+ * Error codes returned by VibeLanguage API functions
  */
-typedef struct VibeValue VibeValue;
-
-/**
- * @brief Error codes returned by VibeLang API functions
- */
-typedef enum {
-    VIBE_SUCCESS = 0,                 /**< Operation successful */
-    VIBE_ERROR_FILE_NOT_FOUND,        /**< File not found */
-    VIBE_ERROR_COMPILATION_FAILED,    /**< Compilation failed */
-    VIBE_ERROR_FUNCTION_NOT_FOUND,    /**< Function not found in module */
-    VIBE_ERROR_TYPE_MISMATCH,         /**< Type mismatch in function call */
-    VIBE_ERROR_LLM_CONNECTION_FAILED, /**< Failed to connect to LLM provider */
-    VIBE_ERROR_MEMORY_ALLOCATION      /**< Memory allocation failed */
+typedef enum VibeError {
+    VIBE_SUCCESS = 0,
+    VIBE_ERROR_GENERAL = -1,
+    VIBE_ERROR_PARSER = -2,
+    VIBE_ERROR_SEMANTIC = -3,
+    VIBE_ERROR_CODEGEN = -4,
+    VIBE_ERROR_RUNTIME = -5,
+    VIBE_ERROR_IO = -6,
+    VIBE_ERROR_LLM_CONNECTION_FAILED = -7  // Added this error code
 } VibeError;
 
 /**
- * @brief Value types supported by VibeLang
+ * Represents a compiled Vibe module
  */
-typedef enum {
-    VIBE_TYPE_NULL,    /**< Null value */
-    VIBE_TYPE_BOOL,    /**< Boolean value */
-    VIBE_TYPE_INT,     /**< Integer value */
-    VIBE_TYPE_FLOAT,   /**< Floating point value */
-    VIBE_TYPE_STRING,  /**< String value */
-    VIBE_TYPE_ARRAY,   /**< Array of values */
-    VIBE_TYPE_OBJECT   /**< Object with key-value pairs */
-} VibeValueType;
+typedef struct VibeModule {
+    char* name;           // Module name
+    char* source_path;    // Source file path
+    char* output_path;    // Output file path
+    void* internal_data;  // Internal compiler data
+} VibeModule;
 
 /**
- * @brief Initialize the VibeLang runtime
- * 
- * This must be called before any other VibeLang functions.
- * 
+ * Represents a runtime value in Vibe
+ */
+typedef struct VibeValue {
+    enum {
+        VIBE_STRING,
+        VIBE_NUMBER,
+        VIBE_BOOLEAN,
+        VIBE_NULL,
+        VIBE_OBJECT
+    } type;
+    
+    union {
+        char* string_val;
+        double number_val;
+        int bool_val;
+        void* object_val;
+    } data;
+} VibeValue;
+
+/**
+ * Initialize the VibeLanguage library
+ *
  * @return VIBE_SUCCESS on success, error code on failure
  */
 VibeError vibelang_init(void);
 
 /**
- * @brief Shut down the VibeLang runtime
- * 
- * Should be called when the application is done using VibeLang
- * to free resources and clean up.
+ * Shutdown the VibeLanguage library
  */
 void vibelang_shutdown(void);
 
 /**
- * @brief Load a VibeLang module from file
- * 
- * The file can be either a .vibe source file or a compiled .so/.dll file.
- * If a source file is provided, it will be compiled automatically.
- * 
- * @param filename Path to the file to load
- * @return Pointer to the loaded module, or NULL on error
+ * Compile VibeLanguage source code to C
+ *
+ * @param source The VibeLanguage source code
+ * @param output_file The output C file path
+ * @return 0 on success, non-zero on error
  */
-VibeModule* vibelang_load(const char* filename);
+int vibelang_compile(const char* source, const char* output_file);
 
 /**
- * @brief Unload a VibeLang module
+ * Parse VibeLanguage source code into an AST
  * 
- * Frees resources associated with the module.
- * 
- * @param module The module to unload
+ * @param source The VibeLanguage source code
+ * @return The root AST node, or NULL on error
  */
-void vibelang_unload(VibeModule* module);
+ast_node_t* vibe_parse_string(const char* source);
 
 /**
- * @brief Call a function in a VibeLang module with variable arguments
+ * Perform semantic analysis on an AST
  * 
- * @param module The module containing the function
- * @param function_name Name of the function to call
- * @param ... Variable arguments to pass to the function
- * @return Result value from the function, or NULL on error
+ * @param ast The root AST node
+ * @return 0 on success, non-zero on error
  */
-VibeValue* vibe_call(VibeModule* module, const char* function_name, ...);
+int vibe_analyze_semantics(ast_node_t* ast);
 
 /**
- * @brief Call a function in a VibeLang module with an array of arguments
+ * Generate C code from an AST
  * 
- * @param module The module containing the function
- * @param function_name Name of the function to call
- * @param args Array of argument values
- * @param arg_count Number of arguments
- * @return Result value from the function, or NULL on error
+ * @param ast The root AST node
+ * @param output_file The output C file path
+ * @return 1 on success, 0 on error
  */
-VibeValue* vibe_call_with_args(VibeModule* module, const char* function_name, VibeValue** args, size_t arg_count);
+int vibe_generate_code(ast_node_t* ast, const char* output_file);
 
 /**
- * @brief Create a null value
+ * Free an AST
  * 
- * @return A new null value
+ * @param ast The root AST node
  */
-VibeValue* vibe_value_null(void);
+void vibe_free_ast(ast_node_t* ast);
 
 /**
- * @brief Create a boolean value
- * 
- * @param value Boolean value (0 for false, non-zero for true)
- * @return A new boolean value
+ * Create a new VibeModule from source
+ *
+ * @param name Module name
+ * @param source_path Path to source file
+ * @return Pointer to new module, NULL on failure
  */
-VibeValue* vibe_value_bool(int value);
+VibeModule* vibe_create_module(const char* name, const char* source_path);
 
 /**
- * @brief Create an integer value
+ * Free a VibeModule
  * 
- * @param value Integer value
- * @return A new integer value
+ * @param module The module to free
  */
-VibeValue* vibe_value_int(long long value);
+void vibe_free_module(VibeModule* module);
 
 /**
- * @brief Create a floating point value
- * 
- * @param value Floating point value
- * @return A new floating point value
+ * Create a new VibeValue with string type
+ *
+ * @param str The string value
+ * @return A new VibeValue
  */
-VibeValue* vibe_value_float(double value);
+VibeValue vibe_string_value(const char* str);
 
 /**
- * @brief Create a string value
- * 
- * @param value String value (will be copied)
- * @return A new string value
+ * Create a new VibeValue with numeric type
+ *
+ * @param num The numeric value
+ * @return A new VibeValue
  */
-VibeValue* vibe_value_string(const char* value);
+VibeValue vibe_number_value(double num);
 
 /**
- * @brief Get the type of a value
- * 
- * @param value The value to check
- * @return The type of the value
+ * Create a new VibeValue with boolean type
+ *
+ * @param b The boolean value
+ * @return A new VibeValue
  */
-VibeValueType vibe_value_get_type(const VibeValue* value);
+VibeValue vibe_bool_value(int b);
 
 /**
- * @brief Get a boolean value
- * 
- * @param value The value to get
- * @return The boolean value, or 0 if not a boolean
+ * Create a new VibeValue with null type
+ *
+ * @return A new VibeValue of null type
  */
-int vibe_value_get_bool(const VibeValue* value);
+VibeValue vibe_null_value(void);
 
 /**
- * @brief Get an integer value
- * 
- * Will convert from other numeric types if possible.
- * 
- * @param value The value to get
- * @return The integer value, or 0 if not convertible
+ * Create a new VibeValue with integer type
+ * (Convenience function - uses number type internally)
+ *
+ * @param value The integer value
+ * @return A new VibeValue
  */
-long long vibe_value_get_int(const VibeValue* value);
+VibeValue vibe_int_value(int value);
 
 /**
- * @brief Get a floating point value
- * 
- * Will convert from other numeric types if possible.
- * 
- * @param value The value to get
- * @return The floating point value, or 0.0 if not convertible
+ * Create a new VibeValue with float type
+ * (Convenience function - uses number type internally)
+ *
+ * @param value The float value
+ * @return A new VibeValue
  */
-double vibe_value_get_float(const VibeValue* value);
-
-/**
- * @brief Get a string value
- * 
- * @param value The value to get
- * @return The string value, or NULL if not a string
- */
-const char* vibe_value_get_string(const VibeValue* value);
-
-/**
- * @brief Free a value
- * 
- * @param value The value to free
- */
-void vibe_value_free(VibeValue* value);
-
-/**
- * @brief Get the last error message
- * 
- * @return The last error message, or NULL if no error
- */
-const char* vibe_get_error_message(void);
+VibeValue vibe_float_value(double value);
 
 #ifdef __cplusplus
 }

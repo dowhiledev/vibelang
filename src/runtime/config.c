@@ -1,197 +1,166 @@
+/**
+ * @file config.c
+ * @brief Configuration management for the Vibe language runtime
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <cjson/cJSON.h>
 #include "../utils/log_utils.h"
-#include "../utils/file_utils.h"
+#include "config.h"
+#include "../vendor/cjson/cJSON.h"
 
-/* LLM Configuration structure */
-typedef struct {
-    char* provider;
-    char* api_key;
-    cJSON* default_params;
-    cJSON* function_overrides;
-} llm_config_t;
+// Default configuration file path
+#define CONFIG_FILE_PATH "vibeconfig.json"
 
-/* Global config */
-static llm_config_t global_config = {0};
+// Global variables to store configuration
+static char* api_key = NULL;
+static char* model_name = NULL;
+static int max_tokens = 2048;
 
-/* Initialize configuration with defaults */
-static void init_default_config() {
-    if (global_config.provider) {
-        free(global_config.provider);
-    }
-    global_config.provider = strdup("OpenAI");
-    
-    if (global_config.api_key) {
-        free(global_config.api_key);
-    }
-    global_config.api_key = NULL;  // Will be read from environment
-    
-    if (global_config.default_params) {
-        cJSON_Delete(global_config.default_params);
-    }
-    
-    global_config.default_params = cJSON_CreateObject();
-    cJSON_AddStringToObject(global_config.default_params, "model", "gpt-3.5-turbo");
-    cJSON_AddNumberToObject(global_config.default_params, "temperature", 0.7);
-    cJSON_AddNumberToObject(global_config.default_params, "max_tokens", 150);
-    
-    if (global_config.function_overrides) {
-        cJSON_Delete(global_config.function_overrides);
-    }
-    global_config.function_overrides = cJSON_CreateObject();
-}
+// Forward declaration of create_default_config function
+static int create_default_config(void);
 
-/* Load configuration from file */
-int load_config_from_file(const char* filename) {
-    // Initialize with defaults first
-    init_default_config();
+/**
+ * Load configuration from the default configuration file
+ * 
+ * @return 1 on success, 0 on failure
+ */
+int load_config(void) {
+    INFO("Loading configuration from %s", CONFIG_FILE_PATH);
     
-    // Check if config file exists
-    if (!file_exists(filename)) {
-        WARN("Config file '%s' not found, using defaults", filename);
+    // Read the configuration file
+    FILE* config_file = fopen(CONFIG_FILE_PATH, "r");
+    if (!config_file) {
+        WARN("Configuration file not found: %s", CONFIG_FILE_PATH);
+        // Create a default config if none exists
+        return create_default_config();
+    }
+    
+    // Get file size
+    fseek(config_file, 0, SEEK_END);
+    long file_size = ftell(config_file);
+    rewind(config_file);
+    
+    // Read file content
+    char* config_content = (char*)malloc(file_size + 1);
+    if (!config_content) {
+        ERROR("Memory allocation failed for config content");
+        fclose(config_file);
         return 0;
     }
     
-    // Read JSON file
-    char* json_text = read_file(filename);
-    if (!json_text) {
-        ERROR("Failed to read config file '%s'", filename);
+    size_t read_size = fread(config_content, 1, file_size, config_file);
+    fclose(config_file);
+    
+    if (read_size != file_size) {
+        ERROR("Failed to read configuration file");
+        free(config_content);
         return 0;
     }
+    
+    config_content[file_size] = '\0';
     
     // Parse JSON
-    cJSON* root = cJSON_Parse(json_text);
-    free(json_text);
+    cJSON* json = cJSON_Parse(config_content);
+    free(config_content);
     
-    if (!root) {
-        ERROR("Failed to parse config file '%s': %s", 
-             filename, cJSON_GetErrorPtr() ? cJSON_GetErrorPtr() : "unknown error");
+    if (!json) {
+        ERROR("Failed to parse configuration file: %s", cJSON_GetErrorPtr());
         return 0;
     }
     
-    // Extract global settings
-    cJSON* global = cJSON_GetObjectItem(root, "global");
-    if (global) {
-        cJSON* provider = cJSON_GetObjectItem(global, "provider");
-        if (provider && cJSON_IsString(provider)) {
-            if (global_config.provider) {
-                free(global_config.provider);
-            }
-            global_config.provider = strdup(provider->valuestring);
-        }
-        
-        cJSON* api_key = cJSON_GetObjectItem(global, "api_key");
-        if (api_key && cJSON_IsString(api_key)) {
-            if (global_config.api_key) {
-                free(global_config.api_key);
-            }
-            global_config.api_key = strdup(api_key->valuestring);
-        }
-        
-        cJSON* params = cJSON_GetObjectItem(global, "default_params");
-        if (params && cJSON_IsObject(params)) {
-            cJSON_Delete(global_config.default_params);
-            global_config.default_params = cJSON_Duplicate(params, 1);
-        }
+    // Extract values
+    cJSON* api_key_json = cJSON_GetObjectItem(json, "api_key");
+    if (cJSON_IsString(api_key_json) && api_key_json->valuestring != NULL) {
+        api_key = strdup(api_key_json->valuestring);
     }
     
-    // Extract function overrides
-    cJSON* overrides = cJSON_GetObjectItem(root, "overrides");
-    if (overrides && cJSON_IsObject(overrides)) {
-        cJSON_Delete(global_config.function_overrides);
-        global_config.function_overrides = cJSON_Duplicate(overrides, 1);
+    cJSON* model_name_json = cJSON_GetObjectItem(json, "model_name");
+    if (cJSON_IsString(model_name_json) && model_name_json->valuestring != NULL) {
+        model_name = strdup(model_name_json->valuestring);
     }
     
-    cJSON_Delete(root);
-    INFO("Loaded LLM config from '%s'", filename);
+    cJSON* max_tokens_json = cJSON_GetObjectItem(json, "max_tokens");
+    if (cJSON_IsNumber(max_tokens_json)) {
+        max_tokens = max_tokens_json->valueint;
+    }
     
+    cJSON_Delete(json);
+    
+    // Validate configuration
+    if (!api_key || strlen(api_key) == 0) {
+        WARN("API key is missing in configuration");
+        return 0;
+    }
+    
+    INFO("Configuration loaded successfully");
     return 1;
 }
 
-/* Clean up configuration */
-void cleanup_config() {
-    if (global_config.provider) {
-        free(global_config.provider);
-        global_config.provider = NULL;
+/**
+ * Create a default configuration file
+ *
+ * @return 1 on success, 0 on failure
+ */
+static int create_default_config(void) {
+    INFO("Creating default configuration file: %s", CONFIG_FILE_PATH);
+    
+    // Set default values
+    api_key = strdup("YOUR_API_KEY_HERE"); // Placeholder
+    model_name = strdup("gpt-4");
+    max_tokens = 2048;
+    
+    // Create JSON
+    cJSON* json = cJSON_CreateObject();
+    cJSON_AddStringToObject(json, "api_key", api_key);
+    cJSON_AddStringToObject(json, "model_name", model_name);
+    cJSON_AddNumberToObject(json, "max_tokens", max_tokens);
+    
+    // Write to file
+    char* config_content = cJSON_Print(json);
+    cJSON_Delete(json);
+    
+    if (!config_content) {
+        ERROR("Failed to generate JSON configuration");
+        return 0;
     }
     
-    if (global_config.api_key) {
-        free(global_config.api_key);
-        global_config.api_key = NULL;
+    FILE* config_file = fopen(CONFIG_FILE_PATH, "w");
+    if (!config_file) {
+        ERROR("Failed to create configuration file: %s", CONFIG_FILE_PATH);
+        free(config_content);
+        return 0;
     }
     
-    if (global_config.default_params) {
-        cJSON_Delete(global_config.default_params);
-        global_config.default_params = NULL;
-    }
+    fputs(config_content, config_file);
+    fclose(config_file);
+    free(config_content);
     
-    if (global_config.function_overrides) {
-        cJSON_Delete(global_config.function_overrides);
-        global_config.function_overrides = NULL;
-    }
+    INFO("Default configuration file created. Please edit %s and set your API key.", CONFIG_FILE_PATH);
+    return 1;
 }
 
-/* Get LLM provider name */
-const char* get_llm_provider() {
-    return global_config.provider;
+/**
+ * Get the API key from the loaded configuration
+ * 
+ * @return The API key string, or NULL if not found or not loaded
+ */
+const char* get_api_key(void) {
+    return api_key;
 }
 
-/* Get API key */
-const char* get_llm_api_key() {
-    // Try config file first
-    if (global_config.api_key) {
-        return global_config.api_key;
+/**
+ * Free all resources allocated for the configuration
+ */
+void free_config(void) {
+    if (api_key) {
+        free(api_key);
+        api_key = NULL;
     }
-    
-    // Fall back to environment variable
-    const char* env_key = getenv("VIBELANG_API_KEY");
-    if (env_key) {
-        return env_key;
+    if (model_name) {
+        free(model_name);
+        model_name = NULL;
     }
-    
-    // Try provider-specific environment variables
-    if (global_config.provider) {
-        if (strcmp(global_config.provider, "OpenAI") == 0) {
-            return getenv("OPENAI_API_KEY");
-        } else if (strcmp(global_config.provider, "Anthropic") == 0) {
-            return getenv("ANTHROPIC_API_KEY");
-        }
-    }
-    
-    return NULL;
-}
-
-/* Get parameter JSON for a function */
-cJSON* get_llm_params_for_function(const char* function_name) {
-    // Check for function-specific override
-    if (function_name && global_config.function_overrides) {
-        cJSON* override = cJSON_GetObjectItem(global_config.function_overrides, function_name);
-        if (override) {
-            // Merge with defaults
-            cJSON* merged = cJSON_Duplicate(global_config.default_params, 1);
-            
-            cJSON* child = NULL;
-            cJSON_ArrayForEach(child, override) {
-                cJSON* existing = cJSON_GetObjectItem(merged, child->string);
-                if (existing) {
-                    cJSON_DeleteItemFromObject(merged, child->string);
-                }
-                cJSON_AddItemToObject(merged, child->string, cJSON_Duplicate(child, 1));
-            }
-            
-            return merged;
-        }
-    }
-    
-    // Return copy of defaults
-    return cJSON_Duplicate(global_config.default_params, 1);
-}
-
-/* Free parameter JSON */
-void free_llm_params(cJSON* params) {
-    if (params) {
-        cJSON_Delete(params);
-    }
+    INFO("Configuration resources freed");
 }

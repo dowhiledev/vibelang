@@ -1,48 +1,62 @@
-# Unit Tests for VibeLang
+# Tests for VibeLanguage
 
-# Create the test data directory
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit/data)
+# Enable testing
+enable_testing()
 
-add_executable(test_ast
-    unit/test_ast.c
+# Set test macros
+include(CTest)
+
+# Include directories
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/../include
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src/utils
+  ${CMAKE_CURRENT_SOURCE_DIR}/../vendor/cjson
+  ${CMAKE_BINARY_DIR}/flex
+  ${CMAKE_BINARY_DIR}/bison
 )
-target_link_libraries(test_ast
-    vibelang_utils
+
+# Create test for AST functions
+add_executable(test_ast 
+  unit/test_ast.c
 )
+target_link_libraries(test_ast PRIVATE vibelang_utils cjson m)
 add_test(NAME test_ast COMMAND test_ast)
 
-add_executable(test_parser
-    unit/test_parser.c
+# Create test for parser utilities
+add_executable(test_parser_utils 
+  unit/test_parser_utils.c
 )
-target_link_libraries(test_parser
-    vibelang_compiler
-    vibelang_utils
-)
-add_test(NAME test_parser COMMAND test_parser)
+target_link_libraries(test_parser_utils PRIVATE vibelang_compiler vibelang_utils cjson)
+add_test(NAME test_parser_utils COMMAND test_parser_utils)
 
-add_executable(test_semantic
-    unit/test_semantic.c
+# Create test for Bison parser
+add_executable(test_bison_parser 
+  unit/test_bison_parser.c
 )
-target_link_libraries(test_semantic
-    vibelang_compiler
-    vibelang_utils
+target_link_libraries(test_bison_parser PRIVATE vibelang_compiler vibelang_utils cjson)
+add_test(NAME test_bison_parser COMMAND test_bison_parser)
+
+# Create test for semantic analysis
+add_executable(test_semantic 
+  unit/test_semantic.c
 )
+target_link_libraries(test_semantic PRIVATE vibelang_compiler vibelang_utils cjson)
 add_test(NAME test_semantic COMMAND test_semantic)
 
-add_executable(test_codegen
-    unit/test_codegen.c
+# Create test for code generation
+add_executable(test_codegen 
+  unit/test_codegen.c
 )
-target_link_libraries(test_codegen
-    vibelang_compiler
-    vibelang_utils
-)
+target_link_libraries(test_codegen PRIVATE vibelang_compiler vibelang_utils cjson)
 add_test(NAME test_codegen COMMAND test_codegen)
 
-add_executable(test_parser_utils
-    unit/test_parser_utils.c
-)
-target_link_libraries(test_parser_utils
-    vibelang_compiler
-    vibelang_utils
-)
-add_test(NAME test_parser_utils COMMAND test_parser_utils)
+# Create test data directory during build
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/unit/data)
+
+# Copy test data files if they exist
+file(GLOB TEST_DATA_FILES "${CMAKE_CURRENT_SOURCE_DIR}/unit/data/*")
+foreach(TEST_DATA_FILE ${TEST_DATA_FILES})
+  get_filename_component(TEST_DATA_FILE_NAME ${TEST_DATA_FILE} NAME)
+  configure_file(${TEST_DATA_FILE} ${CMAKE_BINARY_DIR}/tests/unit/data/${TEST_DATA_FILE_NAME} COPYONLY)
+endforeach()
