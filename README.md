@@ -1,4 +1,21 @@
-# VibeLang
+<h1 align="center">
+  <div style="display: flex; align-items: center;">
+    <picture style="vertical-align: middle;">
+      <source media="(prefers-color-scheme: dark)" srcset="assets/icon-light.svg" width="60" height="60">
+      <source media="(prefers-color-scheme: light)" srcset="assets/icon-dark.svg" width="60" height="60">
+      <img alt="VibeLang Icon" style="vertical-align: middle;">
+    </picture>
+    <span style="vertical-align: middle; margin-left: 10px;">VibeLang</span>
+  </div>
+</h1>
+
+<div >
+
+[![Tests](https://github.com/chandralegend/vibelang/actions/workflows/tests.yml/badge.svg)](https://github.com/chandralegend/vibelang/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-0.1.0-brightgreen.svg)](https://github.com/chandralegend/vibelang)
+
+</div>
 
 VibeLang is a statically-typed language designed for natural language interactions with LLM models. It provides a type-safe way to integrate AI capabilities into applications.
 
