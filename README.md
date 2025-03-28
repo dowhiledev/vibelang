@@ -10,6 +10,20 @@ VibeLang is a statically-typed language designed for natural language interactio
 - 🔄 Milestone 4: Cross-Language Support and Wrappers
 - 🔄 Milestone 5: Comprehensive Testing and Documentation
 
+## Documentation
+
+The API reference and developer documentation are available [Here](https://chandralegend.github.io/vibelang/).
+
+You can also generate the documentation locally using:
+```bash
+make docs
+```
+
+And view it by running:
+```bash
+make serve-docs
+```
+
 ## Features
 
 - Statically typed language with semantic meaning support
@@ -58,7 +72,7 @@ API keys can also be provided via environment variables:
 ### Installation
 
 ```bash
-git clone https://github.com/username/vibelang.git
+git clone https://github.com/chandralegend/vibelang.git
 cd vibelang
 mkdir build && cd build
 cmake ..

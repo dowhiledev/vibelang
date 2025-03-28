@@ -1,0 +1,63 @@
+# Doxyfile for VibeLang
+
+# Project information
+PROJECT_NAME           = "VibeLang"
+PROJECT_NUMBER         = 0.1.0
+PROJECT_BRIEF          = "A language designed for natural LLM integration"
+OUTPUT_DIRECTORY       = docs/generated
+
+# Input files
+INPUT                  = include src
+FILE_PATTERNS          = *.h *.c *.cpp
+RECURSIVE              = YES
+EXCLUDE                = build vendor
+EXCLUDE_PATTERNS       = */vendor/* */build/* */tests/*
+
+# Output formats
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_MAN           = NO
+GENERATE_RTF           = NO
+GENERATE_XML           = YES
+XML_OUTPUT             = xml
+HTML_OUTPUT            = html
+
+# General options
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+CASE_SENSE_NAMES       = NO
+ENABLED_SECTIONS       = 
+MAX_INITIALIZER_LINES  = 30
+SHOW_USED_FILES        = YES
+SHOW_FILES             = YES
+SHOW_NAMESPACES        = YES
+
+# Preprocessing
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = NO
+SEARCH_INCLUDES        = YES
+INCLUDE_PATH           = include
+INCLUDE_FILE_PATTERNS  = *.h
+
+# Dot tool options (for graphics)
+HAVE_DOT               = YES
+DOT_NUM_THREADS        = 0
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+GROUP_GRAPHS           = YES
+INCLUDE_GRAPH          = YES
+INCLUDED_BY_GRAPH      = YES
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+
+# Markdown support
+USE_MDFILE_AS_MAINPAGE = README.md
+MARKDOWN_SUPPORT       = YES
+
+# HTML options
+HTML_TIMESTAMP         = YES
+HTML_DYNAMIC_SECTIONS  = NO
+GENERATE_TREEVIEW      = YES
+TREEVIEW_WIDTH         = 250

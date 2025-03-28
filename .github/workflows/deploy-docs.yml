@@ -1,0 +1,32 @@
+name: Build and Deploy Documentation
+
+on:
+  push:
+    branches: [ main ]
+  # Allow manual triggering of the workflow
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz
+          
+      - name: Build documentation
+        run: |
+          mkdir -p docs/generated
+          doxygen Doxyfile
+          
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@4.1.7
+        with:
+          branch: gh-pages
+          folder: docs/generated/html
+          clean: true

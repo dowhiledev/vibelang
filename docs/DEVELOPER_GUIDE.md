@@ -181,3 +181,61 @@ make test
 - **Symbol Resolution**: Ensure `parser_bison.h` is present for compatibility with legacy code
 - **Memory Management**: Check for proper cleanup in all code paths, especially in semantic analysis and code generation
 - **Missing Libraries**: Add required libraries to CMakeLists.txt
+
+## Documentation
+
+The VibeLang project uses Doxygen for code documentation. To generate the documentation:
+
+### Prerequisites
+
+- Install Doxygen: 
+  - On Ubuntu: `sudo apt-get install doxygen graphviz`
+  - On macOS: `brew install doxygen graphviz`
+  - On Windows: Download from the [Doxygen website](https://www.doxygen.nl/download.html)
+
+### Generating Documentation
+
+Run the following command from the project root directory:
+
+```bash
+make docs
+```
+
+The generated documentation can be found in `docs/generated/html/index.html`.
+
+### Documentation Standards
+
+When documenting code, please follow these standards:
+
+1. Use Doxygen-style comments for functions, classes, and types:
+   ```c
+   /**
+    * @brief Brief description
+    *
+    * Detailed description...
+    *
+    * @param param1 Description of param1
+    * @param param2 Description of param2
+    * @return Description of the return value
+    */
+   ```
+
+2. For simple comments within functions, use standard C comments:
+   ```c
+   // This is a simple comment
+   int x = 5; // End-of-line comment
+   ```
+
+3. Add examples where appropriate:
+   ```c
+   /**
+    * @brief Converts Celsius to Fahrenheit
+    * 
+    * @param celsius Temperature in Celsius
+    * @return Temperature in Fahrenheit
+    * 
+    * @example
+    * double fahrenheit = celsius_to_fahrenheit(25.0);
+    * // fahrenheit = 77.0
+    */
+   ```
