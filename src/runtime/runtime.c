@@ -72,8 +72,8 @@ VibeValue vibe_execute_prompt(const char *prompt, const char *meaning) {
   // Initialize result as NULL in case of failure
   result.type = VIBE_NULL;
 
-  if (!prompt || !meaning) {
-    ERROR("Invalid prompt or meaning parameter");
+  if (!prompt) {
+    ERROR("Invalid prompt parameter");
     return result;
   }
 
@@ -87,26 +87,23 @@ VibeValue vibe_execute_prompt(const char *prompt, const char *meaning) {
   }
 
   // Parse the response based on the meaning
-  if (strcmp(meaning, "temperature in Celsius") == 0) {
+  if (meaning && strcmp(meaning, "temperature in Celsius") == 0) {
     // Parse as a number
     double temperature = atof(llm_response);
     result.type = VIBE_NUMBER;
     result.data.number_val = temperature;
     DEBUG("Parsed temperature: %f", temperature);
-  } else if (strcmp(meaning, "weather description") == 0) {
+  } else if (meaning && strcmp(meaning, "weather description") == 0) {
     // Parse as a string
     result.type = VIBE_STRING;
-    result.data.string_val = strdup(llm_response);
+    result.data.string_val = llm_response; // Transfer ownership
     DEBUG("Parsed weather description: %s", llm_response);
   } else {
     // Default to string
     result.type = VIBE_STRING;
-    result.data.string_val = strdup(llm_response);
+    result.data.string_val = llm_response; // Transfer ownership
     DEBUG("Parsed as generic string: %s", llm_response);
   }
-
-  // Free the LLM response
-  free(llm_response);
 
   return result;
 }
@@ -295,4 +292,25 @@ int vibe_get_bool(VibeValue *value) {
     return 0;
   }
   return value->data.bool_val;
+}
+
+// Get integer value from VibeValue
+int vibe_value_get_int(VibeValue *value) {
+  if (!value)
+    return 0;
+
+  switch (value->type) {
+  case VIBE_NUMBER:
+    return (int)value->data.number_val;
+  case VIBE_STRING:
+    if (value->data.string_val)
+      return atoi(value->data.string_val);
+    break;
+  case VIBE_BOOLEAN:
+    return value->data.bool_val;
+  case VIBE_NULL:
+  default:
+    break;
+  }
+  return 0;
 }

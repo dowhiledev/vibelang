@@ -31,7 +31,7 @@ test: build
 # Run tests with verbose output
 .PHONY: test-verbose
 test-verbose: build
-	@cd $(BUILD_DIR) && ctest -V
+	@cd $(BUILD_DIR) && ctest --output-on-failure --verbose --rerun-failed 
 
 # Generate parser (Flex/Bison) files
 .PHONY: parser
@@ -60,11 +60,26 @@ clean-parser:
 install: build
 	@cmake --build $(BUILD_DIR) --target install
 
-# Generate documentation
+# Generate documentation using Doxygen
 .PHONY: docs
 docs:
+	@command -v doxygen >/dev/null 2>&1 || { echo >&2 "Doxygen not found. Please install it to generate documentation."; exit 1; }
 	@echo "Generating documentation..."
-	@cd docs && doxygen Doxyfile 2>/dev/null || echo "Doxygen not found or error occurred."
+	@mkdir -p docs/generated
+	@doxygen Doxyfile
+	@echo "Documentation generated in docs/generated/html"
+
+# Serve generated documentation
+.PHONY: serve-docs
+serve-docs: docs
+	@echo "Serving documentation on http://localhost:8000"
+	@echo "Press Ctrl+C to stop the server"
+	@cd docs/generated/html && python3 -m http.server 2>/dev/null || python -m SimpleHTTPServer 2>/dev/null || echo "Python not found, please manually open docs/generated/html/index.html in your browser"
+
+# Clean documentation files
+.PHONY: clean-docs
+clean-docs:
+	@rm -rf docs/generated
 
 # Format source code using clang-format
 .PHONY: format
@@ -85,5 +100,7 @@ help:
 	@echo "  clean-parser: Clean up parser generated files"
 	@echo "  install    : Install the project"
 	@echo "  docs       : Generate documentation"
+	@echo "  serve-docs : Serve generated documentation"
+	@echo "  clean-docs : Clean documentation files"
 	@echo "  format     : Format source code"
 	@echo "  help       : Show this help message"

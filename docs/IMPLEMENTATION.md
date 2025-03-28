@@ -170,6 +170,86 @@ LLM integration is handled by the `src/runtime/llm_interface.c` file. It provide
 3. HTTP requests using libcurl
 4. Response parsing using cJSON
 
+#### JSON Response Parsing
+
+Responses from the OpenAI API are returned as JSON objects. VibeLang automatically parses these responses to extract the relevant content:
+
+```c
+static char* parse_openai_response(const char* json_str) {
+  if (!json_str) {
+    ERROR("NULL JSON response");
+    return NULL;
+  }
+  
+  cJSON* root = cJSON_Parse(json_str);
+  if (!root) {
+    ERROR("Failed to parse JSON response");
+    return NULL;
+  }
+  
+  // First, get the "choices" array
+  cJSON* choices = cJSON_GetObjectItem(root, "choices");
+  if (!choices || !cJSON_IsArray(choices)) {
+    ERROR("Invalid choices array in response");
+    cJSON_Delete(root);
+    return NULL;
+  }
+  
+  // Get the first choice
+  cJSON* choice = cJSON_GetArrayItem(choices, 0);
+  if (!choice) {
+    ERROR("Failed to get first choice from response");
+    cJSON_Delete(root);
+    return NULL;
+  }
+  
+  // Get the "message" object
+  cJSON* message = cJSON_GetObjectItem(choice, "message");
+  if (!message) {
+    ERROR("Message object not found in choice");
+    cJSON_Delete(root);
+    return NULL;
+  }
+  
+  // Get the "content" string
+  cJSON* content = cJSON_GetObjectItem(message, "content");
+  if (!content || !cJSON_IsString(content)) {
+    ERROR("Content not found or not a string");
+    cJSON_Delete(root);
+    return NULL;
+  }
+  
+  // Extract the content string
+  char* result = strdup(content->valuestring);
+  
+  // Clean up JSON objects
+  cJSON_Delete(root);
+  
+  return result;
+}
+```
+
+#### Request Format
+
+OpenAI API requests are formatted as JSON objects with the following structure:
+
+```json
+{
+  "model": "gpt-3.5-turbo",
+  "messages": [
+    {
+      "role": "user",
+      "content": "The prompt text"
+    }
+  ],
+  "temperature": 0.7
+}
+```
+
+#### Development Mode
+
+For testing purposes, VibeLang includes a development mode that can be enabled by setting the environment variable `VIBELANG_DEV_MODE=1`. In development mode, LLM requests are not actually sent to external APIs, but instead return predefined mock responses based on keywords in the prompt.
+
 #### Configuration System
 
 The runtime can be configured through the `vibeconfig.json` file, which is processed by `src/runtime/config.c`. The configuration includes:

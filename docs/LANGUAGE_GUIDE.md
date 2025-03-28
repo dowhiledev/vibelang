@@ -1,5 +1,4 @@
 # VibeLang Language Guide
-
 This guide covers the syntax and features of the VibeLang programming language.
 
 ## Language Overview
@@ -209,6 +208,65 @@ Example configuration:
   }
 }
 ```
+
+## LLM Configuration Options
+
+### Configuration File
+
+VibeLang uses a configuration file (`vibeconfig.json`) to control LLM behavior. The configuration file supports the following options:
+
+#### Global Configuration
+
+```json
+{
+  "global": {
+    "provider": "OpenAI",           // LLM provider name
+    "api_key": "your-api-key-here", // API key for authentication
+    "default_params": {
+      "model": "gpt-3.5-turbo",     // Default model to use
+      "temperature": 0.7,           // Control randomness (0.0-1.0)
+      "max_tokens": 150             // Maximum response length
+    }
+  }
+}
+```
+
+#### Function-Specific Overrides
+
+You can override the default parameters for specific functions:
+
+```json
+{
+  "overrides": {
+    "getTemperature": {
+      "temperature": 0.5,    // Override temperature for getTemperature function
+      "max_tokens": 100      // Override token limit for getTemperature function
+    },
+    "getForecast": {
+      "temperature": 0.7,
+      "max_tokens": 250
+    }
+  }
+}
+```
+
+### Environment Variables
+
+VibeLang also supports configuration through environment variables, which take precedence over the configuration file:
+
+- `OPENAI_API_KEY`: API key for OpenAI
+- `VIBELANG_API_KEY`: Generic API key for any provider
+- `VIBELANG_DEV_MODE`: Set to "1" to enable development mode with mock responses
+
+### Development Mode
+
+When `VIBELANG_DEV_MODE=1` is set, VibeLang uses mock responses for LLM requests instead of calling real APIs. This is useful for testing and development without using API quotas.
+
+The mock responses are generated based on keywords in the prompt:
+
+- Weather-related prompts return a description of sunny weather
+- Temperature-related prompts return "25"
+- Greeting prompts return a welcome message
 
 ## Best Practices
 

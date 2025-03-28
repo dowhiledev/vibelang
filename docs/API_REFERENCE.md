@@ -244,6 +244,84 @@ int main() {
 }
 ```
 
+## LLM Interaction API
+
+### `VibeValue vibe_execute_prompt(const char *prompt, const char *meaning)`
+
+Executes a prompt using the configured LLM provider and returns the result.
+
+**Parameters:**
+- `prompt`: The prompt to send to the LLM
+- `meaning`: Semantic meaning context that affects how the response is parsed
+
+**Returns:** A VibeValue containing the LLM's response, appropriately typed based on the meaning context.
+
+### `char *send_llm_prompt(const char *prompt, const char *meaning)`
+
+Low-level function to send a prompt to the LLM and get the raw response.
+
+**Parameters:**
+- `prompt`: The prompt to send to the LLM
+- `meaning`: Optional semantic meaning context for the prompt
+
+**Returns:** The raw text response from the LLM, or NULL on error. The caller is responsible for freeing this memory.
+
+### `char *format_prompt(const char *template, char **var_names, char **var_values, int var_count)`
+
+Formats a prompt template by substituting variables.
+
+**Parameters:**
+- `template`: The prompt template with variables in {variable} format
+- `var_names`: Array of variable names
+- `var_values`: Array of variable values
+- `var_count`: Number of variables
+
+**Returns:** A formatted prompt string with variables replaced. The caller is responsible for freeing this memory.
+
+## LLM Configuration
+
+### `int load_config(void)`
+
+Loads LLM configuration from the vibeconfig.json file or environment variables.
+
+**Returns:** 1 on success, 0 on failure
+
+### `const char *get_api_key(void)`
+
+Gets the configured LLM API key.
+
+**Returns:** The API key string, or NULL if not set
+
+### `void free_config(void)`
+
+Frees all resources allocated for the LLM configuration.
+
+## Response Handling
+
+VibeLang now automatically handles JSON responses from OpenAI and other LLM providers. The JSON parsing extracts the actual content from structured responses like:
+
+```json
+{
+  "id": "chatcmpl-123",
+  "object": "chat.completion",
+  "created": 1677858242,
+  "model": "gpt-3.5-turbo-0301",
+  "usage": { ... },
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "This is the actual response content"
+      },
+      "finish_reason": "stop",
+      "index": 0
+    }
+  ]
+}
+```
+
+The extracted content is then converted to the appropriate type based on the semantic meaning context.
+
 ## Error Codes
 
 | Code | Name | Description |
