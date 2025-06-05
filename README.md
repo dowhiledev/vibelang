@@ -11,9 +11,9 @@
 
 <div >
 
-[![Tests](https://github.com/chandralegend/vibelang/actions/workflows/tests.yml/badge.svg)](https://github.com/chandralegend/vibelang/actions/workflows/tests.yml)
+[![Tests](https://github.com/dowhiledev/vibelang/actions/workflows/tests.yml/badge.svg)](https://github.com/dowhiledev/vibelang/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.1.0-brightgreen.svg)](https://github.com/chandralegend/vibelang)
+[![Version](https://img.shields.io/badge/version-0.1.0-brightgreen.svg)](https://github.com/dowhiledev/vibelang)
 
 </div>
 
@@ -29,7 +29,7 @@ VibeLang is a statically-typed language designed for natural language interactio
 
 ## Documentation
 
-The API reference and developer documentation are available [Here](https://chandralegend.github.io/vibelang/).
+The API reference and developer documentation are available [Here](https://dowhiledev.github.io/vibelang/).
 
 You can also generate the documentation locally using:
 ```bash
@@ -90,7 +90,7 @@ API keys can also be provided via environment variables:
 ### Installation
 
 ```bash
-git clone https://github.com/chandralegend/vibelang.git
+git clone https://github.com/dowhiledev/vibelang.git
 cd vibelang
 mkdir build && cd build
 cmake ..

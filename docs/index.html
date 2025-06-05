@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeLang - Natural Language Programming</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #ff0080, #00ffff);
+            border-radius: 4px;
+        }
+        
+        /* Glitch effect */
+        .glitch {
+            position: relative;
+            animation: glitch 2s infinite;
+        }
+        
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .glitch::before {
+            animation: glitch-1 0.5s infinite;
+            color: #ff0080;
+            z-index: -1;
+        }
+        
+        .glitch::after {
+            animation: glitch-2 0.5s infinite;
+            color: #00ffff;
+            z-index: -2;
+        }
+        
+        @keyframes glitch {
+            0%, 90%, 100% {
+                transform: translate(0);
+            }
+            10% {
+                transform: translate(-2px, 1px);
+            }
+            20% {
+                transform: translate(2px, -1px);
+            }
+            30% {
+                transform: translate(-1px, 2px);
+            }
+            40% {
+                transform: translate(1px, -2px);
+            }
+            50% {
+                transform: translate(-2px, 1px);
+            }
+            60% {
+                transform: translate(2px, -1px);
+            }
+            70% {
+                transform: translate(-1px, 2px);
+            }
+            80% {
+                transform: translate(1px, -2px);
+            }
+        }
+        
+        @keyframes glitch-1 {
+            0%, 100% {
+                transform: translate(0);
+            }
+            20% {
+                transform: translate(-2px, 2px);
+            }
+            40% {
+                transform: translate(-2px, -2px);
+            }
+            60% {
+                transform: translate(2px, 2px);
+            }
+            80% {
+                transform: translate(2px, -2px);
+            }
+        }
+        
+        @keyframes glitch-2 {
+            0%, 100% {
+                transform: translate(0);
+            }
+            20% {
+                transform: translate(2px, 0);
+            }
+            40% {
+                transform: translate(-2px, 0);
+            }
+            60% {
+                transform: translate(0, 2px);
+            }
+            80% {
+                transform: translate(0, -2px);
+            }
+        }
+        
+        /* Neon glow effect */
+        .neon-glow {
+            text-shadow: 
+                0 0 5px currentColor,
+                0 0 10px currentColor,
+                0 0 15px currentColor,
+                0 0 20px currentColor;
+        }
+        
+        /* Typing animation */
+        .typing {
+            overflow: hidden;
+            border-right: 2px solid #00ffff;
+            animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+        
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #00ffff }
+        }
+        
+        /* Code block styling */
+        .code-block {
+            background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(30,30,60,0.8));
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            box-shadow: 
+                0 0 20px rgba(0, 255, 255, 0.1),
+                inset 0 0 20px rgba(255, 0, 128, 0.05);
+        }
+        
+        /* Retro grid */
+        .retro-grid {
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        
+        /* Floating elements */
+        .float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        /* Canvas styling */
+        #background-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10;
+        }
+        
+        /* Content overlay */
+        .content-overlay {
+            background: linear-gradient(
+                rgba(0, 0, 0, 0.7),
+                rgba(0, 0, 0, 0.8),
+                rgba(0, 0, 0, 0.9)
+            );
+        }
+        
+        /* Logo styles */
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-svg {
+            width: 120px;
+            height: 30px;
+            filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.5));
+        }
+        
+        /* Floating thug glasses */
+        .floating-glasses {
+            position: fixed;
+            opacity: 0.15;
+            animation: float 8s ease-in-out infinite;
+            z-index: 1;
+            width: 60px;
+            height: 20px;
+        }
+        
+        .floating-glasses img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .floating-glasses:nth-child(1) { 
+            top: 20%; 
+            right: 10%; 
+            animation-delay: 0s; 
+        }
+        .floating-glasses:nth-child(2) { 
+            top: 60%; 
+            left: 5%; 
+            animation-delay: 2s; 
+        }
+        .floating-glasses:nth-child(3) { 
+            top: 80%; 
+            right: 20%; 
+            animation-delay: 4s; 
+        }
+        
+        /* Deal with it text */
+        .deal-with-it {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
+            font-size: 14px;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+            opacity: 0;
+            animation: dealWithIt 10s infinite;
+            z-index: 1000;
+        }
+        
+        @keyframes dealWithIt {
+            0%, 80%, 100% { opacity: 0; transform: translateY(20px); }
+            85%, 95% { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-black text-white overflow-x-hidden">
+    <!-- Background Canvas -->
+    <canvas id="background-canvas"></canvas>
+    
+    <!-- Floating Thug Life Glasses -->
+    <div class="floating-glasses">
+        <img src="thug-glass.png" alt="Thug Glasses">
+    </div>
+    <div class="floating-glasses">
+        <img src="thug-glass.png" alt="Thug Glasses">
+    </div>
+    <div class="floating-glasses">
+        <img src="thug-glass.png" alt="Thug Glasses">
+    </div>
+    
+    <!-- Deal with it text -->
+    <div class="deal-with-it">
+        DEAL WITH IT 😎
+    </div>
+    
+    <!-- Content Overlay -->
+    <div class="content-overlay min-h-screen">
+        <!-- Header -->
+        <nav class="fixed top-0 w-full z-50 bg-black bg-opacity-80 backdrop-blur-sm border-b border-cyan-500 border-opacity-30">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="logo-container relative">
+                        <svg class="logo-svg text-cyan-400" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+                            <text x="213.8" y="391.3" font-family="Gill Sans" font-size="300" fill="currentColor">VibeLang</text>
+                            <g>
+                                <path d="M -646.3 290.5 h 30 v 30 h -30 z" fill="currentColor"/>
+                                <path d="M -1006.3 260.5 h 60 v 30 h -60 z" fill="currentColor"/>
+                                <path fill="currentColor" d="M -946.3 230.5 v 30 h 180 v 30 h 30 v 30 h 30 v 30 h 30 v 30 h 210 v -30 h 30 v -30 h 30 v -30 h 60 v 30 h 30 v 30 h 210 v -30 h 30 v -30 h 30 v -60 z m 390 120 h -30 v -30 h -30 v 30 h -30 v -30 h -30 v -30 h -30 v -30 h 30 v 30 h 30 v -30 h 30 v 30 h 30 v 30 h 30 z m 360 -30 h -30 v -30 h -30 v 30 h -30 v -30 h -30 v -30 h 30 v 30 h 30 v -30 h 30 v 30 h 30 z"/>
+                            </g>
+                        </svg>
+                        <div class="flex flex-col">
+                            <div class="text-sm text-cyan-400 opacity-70">v0.1.0</div>
+                        </div>
+                    </div>
+                    <div class="hidden md:flex items-center space-x-8">
+                        <a href="#features" class="hover:text-cyan-400 transition-colors">Features</a>
+                        <a href="#docs" class="hover:text-pink-400 transition-colors">Docs</a>
+                        <a href="#examples" class="hover:text-cyan-400 transition-colors">Examples</a>
+                        <a href="https://github.com/dowhiledev/vibelang" class="bg-gradient-to-r from-cyan-500 to-pink-500 px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
+                            <i data-lucide="github" class="inline w-4 h-4 mr-2"></i>
+                            GitHub
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="pt-32 pb-20">
+            <div class="container mx-auto px-6 text-center">
+                <div class="mb-8 relative">
+                    <h1 class="text-6xl md:text-8xl font-black font-mono mb-4 glitch neon-glow bg-gradient-to-r from-cyan-400 via-pink-500 to-cyan-400 bg-clip-text text-transparent relative" data-text="VibeLang">
+                        VibeLang
+                        <!-- Thug life glasses on the title -->
+                        <img src="thug-glass.png" alt="Thug Life Glasses" class="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-90" style="width: 120px; height: 80px; transform: translate(-50%, -50%) rotate(-2deg);">
+                    </h1>
+                    <div class="text-xl md:text-2xl text-cyan-300 typing font-mono max-w-2xl mx-auto">
+                        Natural Language Programming for the AI Era
+                    </div>
+                </div>
+                
+                <p class="text-lg md:text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
+                    A statically-typed language designed for natural language interactions with LLM models. 
+                    Build AI features with ease.
+                </p>
+                
+                <div class="flex flex-col md:flex-row items-center justify-center gap-6 mb-16">
+                    <button class="bg-gradient-to-r from-pink-500 to-cyan-500 px-8 py-4 rounded-lg text-lg font-semibold hover:shadow-xl hover:shadow-pink-500/25 transition-all transform hover:scale-105">
+                        <i data-lucide="play" class="inline w-5 h-5 mr-2"></i>
+                        Get Started
+                    </button>
+                    <button class="border-2 border-cyan-400 text-cyan-400 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-cyan-400 hover:text-black transition-all">
+                        <i data-lucide="book-open" class="inline w-5 h-5 mr-2"></i>
+                        Read Docs
+                    </button>
+                </div>
+
+                <!-- Code Example -->
+                <div class="max-w-4xl mx-auto code-block rounded-xl p-8 font-mono text-left">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-cyan-400 font-semibold">weather.vibe</div>
+                        <div class="flex space-x-2">
+                            <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                            <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                        </div>
+                    </div>
+                    <pre class="text-sm md:text-base leading-relaxed"><code><span class="text-pink-400">type</span> <span class="text-cyan-300">Temperature</span> = <span class="text-yellow-400">Meaning</span>&lt;<span class="text-green-400">Int</span>&gt;(<span class="text-orange-400">"temperature in Celsius"</span>);
+<span class="text-pink-400">type</span> <span class="text-cyan-300">Forecast</span> = <span class="text-yellow-400">Meaning</span>&lt;<span class="text-green-400">String</span>&gt;(<span class="text-orange-400">"weather forecast description"</span>);
+
+<span class="text-pink-400">fn</span> <span class="text-cyan-300">getTemperature</span>(<span class="text-purple-300">city</span>: <span class="text-green-400">String</span>) -> <span class="text-cyan-300">Temperature</span> {
+    <span class="text-yellow-400">prompt</span> <span class="text-orange-400">"What is the current temperature in {city} in Celsius?"</span>;
+}
+
+<span class="text-pink-400">fn</span> <span class="text-cyan-300">getForecast</span>(<span class="text-purple-300">city</span>: <span class="text-green-400">String</span>, <span class="text-purple-300">day</span>: <span class="text-green-400">String</span>) -> <span class="text-cyan-300">Forecast</span> {
+    <span class="text-yellow-400">prompt</span> <span class="text-orange-400">"Provide a brief weather forecast for {city} on {day}."</span>;
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="py-20 retro-grid">
+            <div class="container mx-auto px-6">
+                <h2 class="text-4xl md:text-6xl font-bold text-center mb-16 font-mono bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent">
+                    Features
+                </h2>
+                
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="code-block rounded-xl p-8 float hover:shadow-xl hover:shadow-cyan-500/10 transition-all relative">
+                        <div class="text-cyan-400 mb-4 relative">
+                            <i data-lucide="brain" class="w-12 h-12"></i>
+                            <img src="thug-glass.png" alt="Thug Glasses" class="absolute top-2 -right-2 opacity-0.7" style="width: 20px; height: 8px;">
+                        </div>
+                        <h3 class="text-xl font-bold mb-4 text-cyan-300">AI-Powered</h3>
+                        <p class="text-gray-300">Direct integration with LLM providers for natural language programming.</p>
+                    </div>
+                    
+                    <div class="code-block rounded-xl p-8 float hover:shadow-xl hover:shadow-pink-500/10 transition-all relative" style="animation-delay: 0.2s;">
+                        <div class="text-pink-400 mb-4 relative">
+                            <i data-lucide="shield-check" class="w-12 h-12"></i>
+                            <img src="thug-glass.png" alt="Thug Glasses" class="absolute top-2 -right-2 opacity-0.7" style="width: 20px; height: 8px;">
+                        </div>
+                        <h3 class="text-xl font-bold mb-4 text-pink-300">Type Safe</h3>
+                        <p class="text-gray-300">Statically typed with semantic meaning support for robust code.</p>
+                    </div>
+                    
+                    <div class="code-block rounded-xl p-8 float hover:shadow-xl hover:shadow-cyan-500/10 transition-all relative" style="animation-delay: 0.4s;">
+                        <div class="text-cyan-400 mb-4 relative">
+                            <i data-lucide="code" class="w-12 h-12"></i>
+                            <img src="thug-glass.png" alt="Thug Glasses" class="absolute top-2 -right-2 opacity-0.7" style="width: 20px; height: 8px;">
+                        </div>
+                        <h3 class="text-xl font-bold mb-4 text-cyan-300">Cross-Platform</h3>
+                        <p class="text-gray-300">C API with Python wrappers for seamless integration.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Status Section -->
+        <section class="py-20">
+            <div class="container mx-auto px-6">
+                <h2 class="text-4xl font-bold text-center mb-16 font-mono text-cyan-400">
+                    Development Status
+                </h2>
+                
+                <div class="max-w-2xl mx-auto space-y-6">
+                    <div class="flex items-center space-x-4 code-block rounded-lg p-4">
+                        <div class="text-green-400">✅</div>
+                        <span class="flex-1">Core Compiler Development</span>
+                        <div class="text-green-400 font-mono">COMPLETE</div>
+                    </div>
+                    <div class="flex items-center space-x-4 code-block rounded-lg p-4">
+                        <div class="text-green-400">✅</div>
+                        <span class="flex-1">Code Generation & C API Exposure</span>
+                        <div class="text-green-400 font-mono">COMPLETE</div>
+                    </div>
+                    <div class="flex items-center space-x-4 code-block rounded-lg p-4">
+                        <div class="text-green-400">✅</div>
+                        <span class="flex-1">Runtime Library & LLM Integration</span>
+                        <div class="text-green-400 font-mono">COMPLETE</div>
+                    </div>
+                    <div class="flex items-center space-x-4 code-block rounded-lg p-4">
+                        <div class="text-yellow-400">🔄</div>
+                        <span class="flex-1">Cross-Language Support and Wrappers</span>
+                        <div class="text-yellow-400 font-mono">IN PROGRESS</div>
+                    </div>
+                    <div class="flex items-center space-x-4 code-block rounded-lg p-4">
+                        <div class="text-yellow-400">🔄</div>
+                        <span class="flex-1">Comprehensive Testing and Documentation</span>
+                        <div class="text-yellow-400 font-mono">IN PROGRESS</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="py-12 border-t border-cyan-500 border-opacity-30">
+            <div class="container mx-auto px-6 text-center">
+                <div class="text-cyan-400 font-mono text-lg mb-4">
+                    Made with ❤️ for the AI Era
+                </div>
+                <div class="text-gray-400">
+                    © 2025 VibeLang. Licensed under MIT.
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript for the retro background -->
+    <script type="module">
+        import { Scene, PerspectiveCamera, Color, Object3D, PlaneGeometry, BufferGeometry, BufferAttribute, Vector2, Vector3, MathUtils } from 'https://unpkg.com/three@0.150.0/build/three.module.js';
+        import { SimplexNoise } from 'https://unpkg.com/three@0.150.0/examples/jsm/math/SimplexNoise.js';
+
+        let noise = new SimplexNoise();
+
+        class WireRenderer {
+            constructor(cnv) {
+                this.domElement = cnv;
+                this.context = cnv.getContext("2d");
+                this.clearColor = "black";
+                this.halfSize = new Vector3();
+                this.context.lineCap = "round";
+            }
+            
+            setBackgroundGradient(colorStops) {
+                this.clearColor = this.context.createLinearGradient(0, 0, 0, this.domElement.height);
+                colorStops.forEach(cs => {
+                    this.clearColor.addColorStop(cs.offset, cs.color);
+                })
+            }
+            
+            setSize(width, height) {
+                this.domElement.width = width;
+                this.domElement.height = height;
+                this.halfSize.set(width * 0.5, height * 0.5);
+            }
+            
+            render(scene, camera) {
+                scene.updateMatrixWorld();
+                camera.updateMatrixWorld();
+                
+                let ctx = this.context;
+                ctx.lineCap = "round";
+                ctx.fillStyle = this.clearColor;
+                ctx.fillRect(0, 0, this.domElement.width, this.domElement.height);
+                
+                scene.traverse(object => {
+                    if (object.isLines) {
+                        let g = object.geometry;
+                        let m = object.material;
+                        let index = g.index;
+                        ctx.lineWidth = m.lineWidth;
+                        ctx.strokeStyle = m.color;
+                        ctx.beginPath();
+                        for (let i = 0; i < index.count * 0.5; i++) {
+                            object.linePoints.forEach((lp, idx) => {
+                                lp.fromBufferAttribute(g.attributes.position, index.getX(i * 2 + idx));
+                                object.localToWorld(lp);
+                                lp.project(camera);
+                                lp.y *= -1;
+                                lp.multiply(this.halfSize).add(this.halfSize);
+                            })
+                            ctx.moveTo(object.linePoints[0].x, object.linePoints[0].y);
+                            ctx.lineTo(object.linePoints[1].x, object.linePoints[1].y);
+                        }
+                        ctx.stroke();
+                    }
+                })
+            }
+        }
+
+        class Lines extends Object3D {
+            constructor(geometry, material) {
+                super();
+                this.geometry = geometry;
+                this.material = material;
+                this.isLines = true;
+                this.linePoints = [new Vector3(), new Vector3()];
+            }
+        }
+
+        function ToQuads(g) {
+            let p = g.parameters;
+            let segmentsX = p.widthSegments || 1;
+            let segmentsY = p.heightSegments || 1;
+            let indices = [];
+            for (let i = 0; i < segmentsY + 1; i++) {
+                let index11 = 0;
+                let index12 = 0;
+                for (let j = 0; j < segmentsX; j++) {
+                    index11 = (segmentsX + 1) * i + j;
+                    index12 = index11 + 1;
+                    let index21 = index11;
+                    let index22 = index11 + (segmentsX + 1);
+                    indices.push(index11, index12);
+                    if (index22 < ((segmentsX + 1) * (segmentsY + 1) - 1)) {
+                        indices.push(index21, index22);
+                    }
+                }
+                if ((index12 + segmentsX + 1) <= ((segmentsX + 1) * (segmentsY + 1) - 1)) {
+                    indices.push(index12, index12 + segmentsX + 1);
+                }
+            }
+            g.setIndex(indices);
+        }
+
+        // Setup scene
+        let cnv = document.getElementById('background-canvas');
+        let scene = new Scene();
+        let camera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 0.25, 10.25);
+        let renderer = new WireRenderer(cnv);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        // Cyberpunk color scheme
+        let backGrd = [
+            { offset: 0, color: "#ff0080" }, 
+            { offset: 0.5, color: "#8000ff" }, 
+            { offset: 1, color: "#000020" }
+        ];
+        renderer.setBackgroundGradient(backGrd);
+
+        // Grid
+        let g = new PlaneGeometry(20, 22, 15, 11).translate(0, 1, 0).rotateX(-Math.PI * 0.5);
+        ToQuads(g);
+
+        let pos = g.attributes.position;
+        let isMoving = [];
+        for (let i = 0; i < pos.count; i++) {
+            let z = pos.getZ(i);
+            let moving = 1;
+            if (z > 9 || z < -10) {
+                moving = 0;
+            }
+            if (z < -10) {
+                z -= 2 * Math.sign(z);
+            }
+            isMoving.push(moving);
+            pos.setZ(i, z);
+        }
+        g.setAttribute("isMoving", new BufferAttribute(new Float32Array(isMoving), 1));
+        g.setAttribute("posInit", g.attributes.position.clone());
+
+        let m = {
+            lineWidth: 2,
+            color: "#00ffff",
+        }
+        let grid = new Lines(g, m);
+        scene.add(grid);
+
+        // Animation variables
+        let posInit = g.attributes.posInit;
+        let moves = g.attributes.isMoving;
+        let uvs = g.attributes.uv;
+        let uv = new Vector2();
+        let speed = 0.5;
+
+        function waveGridByTime(time) {
+            for (let i = 0; i < g.attributes.position.count; i++) {
+                uv.fromBufferAttribute(uvs, i);
+                let maxHeight = 2;
+                let valley = MathUtils.smoothstep(Math.abs(uv.x - 0.5), 0.05, 0.25) * maxHeight;
+
+                let currZ = posInit.getZ(i);
+                let currX = posInit.getX(i);
+                let currScale = 1 / 10 * 2;
+                if (moves.getX(i) == 0) {
+                    let n1 = Math.floor((time * speed / 2)) * 2;
+                    let nz1 = noise.noise(currX * currScale, (currZ - n1) * currScale) * 0.5 + 0.5;
+                    let n2 = (Math.floor((time * speed / 2)) + 1) * 2;
+                    let nz2 = noise.noise(currX * currScale, (currZ - n2) * currScale) * 0.5 + 0.5;
+                    let noize = (nz2 - nz1) * (((time * speed) % 2) / 2) + nz1;
+                    pos.setY(i, noize * valley);
+                } else {
+                    let zGap = (time * speed) % 2;
+                    let noize = noise.noise(currX * currScale, (currZ - Math.floor((time * speed / 2)) * 2) * currScale) * 0.5 + 0.5;
+                    pos.setY(i, noize * valley);
+                    pos.setZ(i, currZ + zGap);
+                }
+            }
+        }
+
+        // Resize handler
+        window.addEventListener("resize", event => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setBackgroundGradient(backGrd);
+        });
+
+        // Animation loop
+        let timeStart = performance.now();
+
+        function draw() {
+            let t = (performance.now() - timeStart) * 0.001;
+            waveGridByTime(t * 2);
+            renderer.render(scene, camera);
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

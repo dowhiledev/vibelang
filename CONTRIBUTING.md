@@ -16,7 +16,7 @@ Thank you for your interest in contributing to VibeLang! This document provides 
 1. Fork the repository on GitHub
 2. Clone your fork locally:
    ```bash
-   git clone https://github.com/chandralegend/vibelang.git
+   git clone https://github.com/dowhiledev/vibelang.git
    cd vibelang
    ```
 3. Set up the build environment:
