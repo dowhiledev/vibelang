@@ -1,0 +1,10 @@
+// OpenAI joke generator example
+
+// Define a type for the generated joke text
+type Joke = Meaning<String>("a short humorous line");
+
+type Topic = Meaning<String>("topic for the joke");
+
+fn tellJoke(topic: Topic) -> Joke {
+    prompt "Tell me a short joke about {topic}.";
+}
