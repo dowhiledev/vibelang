@@ -1,0 +1,30 @@
+{
+  "name": "vibelang",
+  "displayName": "VibeLang",
+  "description": "Syntax highlighting for VibeLang files",
+  "version": "0.0.1",
+  "publisher": "vibelang",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "vibelang",
+        "aliases": ["VibeLang", "vibe"],
+        "extensions": [".vibe"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "vibelang",
+        "scopeName": "source.vibelang",
+        "path": "./syntaxes/vibelang.tmLanguage.json"
+      }
+    ]
+  }
+}
