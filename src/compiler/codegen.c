@@ -266,6 +266,17 @@ static int generate_function(ast_node_t *func, FILE *file) {
           if (param->children[j]->type == AST_BASIC_TYPE) {
             param_type = ast_get_string(param->children[j], "type");
             break;
+          } else if (param->children[j]->type == AST_MEANING_TYPE) {
+            // Meaning types wrap a basic type; extract the base type
+            ast_node_t *meaning = param->children[j];
+            for (int k = 0; k < meaning->child_count; k++) {
+              if (meaning->children[k]->type == AST_BASIC_TYPE) {
+                param_type =
+                    ast_get_string(meaning->children[k], "type");
+                break;
+              }
+            }
+            break;
           }
         }
 
