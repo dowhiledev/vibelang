@@ -43,6 +43,13 @@ set(FLEX_OUTPUT_DIR ${CMAKE_BINARY_DIR}/flex)
 set(BISON_OUTPUT_DIR ${CMAKE_BINARY_DIR}/bison)
 file(MAKE_DIRECTORY ${FLEX_OUTPUT_DIR} ${BISON_OUTPUT_DIR})
 
+# Mark parser outputs as generated to avoid configure-time checks
+set_source_files_properties(
+    ${BISON_OUTPUT_DIR}/parser.tab.c ${BISON_OUTPUT_DIR}/parser.tab.h
+    ${FLEX_OUTPUT_DIR}/lexer.c ${FLEX_OUTPUT_DIR}/lexer.h
+    PROPERTIES GENERATED TRUE
+)
+
 # Include directories
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -91,6 +98,8 @@ set_target_properties(vibelang_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
 add_library(vibelang_compiler STATIC
   src/compiler/parser_utils.c
   src/compiler/parser_impl.c
+  ${BISON_OUTPUT_DIR}/parser.tab.c
+  ${FLEX_OUTPUT_DIR}/lexer.c
   src/compiler/symbol_table.c
   src/compiler/semantic.c
   src/compiler/codegen.c
@@ -124,6 +133,7 @@ add_executable(vibec
 
 # IMPORTANT: Link vibec AFTER defining the executable
 target_link_libraries(vibec PUBLIC vibelang)
+target_link_libraries(vibec PRIVATE vibelang_compiler)
 
 # On macOS, set the proper RPATH for the executable
 if(APPLE)
