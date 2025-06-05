@@ -85,6 +85,7 @@ API keys can also be provided via environment variables:
 - C compiler (GCC or Clang)
 - CMake 3.10+
 - libcurl and cJSON development libraries
+- Bison and Flex (for building the parser)
 
 ### Installation
 
