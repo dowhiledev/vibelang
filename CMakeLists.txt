@@ -159,6 +159,6 @@ install(TARGETS vibelang vibec
   ARCHIVE DESTINATION lib
 )
 
-install(FILES include/vibelang.h include/runtime.h
+install(FILES include/vibelang.h include/runtime.h src/utils/ast.h
   DESTINATION include
 )
