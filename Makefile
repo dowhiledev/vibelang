@@ -15,7 +15,7 @@ configure:
 
 # Build the project
 .PHONY: build
-build: configure
+build: parser configure
 	@cmake --build $(BUILD_DIR)
 
 # Clean the build directory

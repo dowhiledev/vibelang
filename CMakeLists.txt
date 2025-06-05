@@ -78,12 +78,14 @@ add_library(vibelang_utils STATIC
   src/utils/file_utils.c
   src/utils/cache_utils.c
 )
+set_target_properties(vibelang_utils PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 add_library(vibelang_runtime STATIC
   src/runtime/config.c
   src/runtime/runtime.c
   src/runtime/llm_interface.c
 )
+set_target_properties(vibelang_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Add compiler library
 add_library(vibelang_compiler STATIC
@@ -93,6 +95,7 @@ add_library(vibelang_compiler STATIC
   src/compiler/semantic.c
   src/compiler/codegen.c
 )
+set_target_properties(vibelang_compiler PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Include the compiler-specific CMake configuration
 add_subdirectory(src/compiler)
