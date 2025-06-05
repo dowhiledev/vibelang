@@ -1,0 +1,67 @@
+{
+  "scopeName": "source.vibelang",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#keywords" },
+    { "include": "#types" },
+    { "include": "#constants" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.vibelang",
+          "begin": "//",
+          "beginCaptures": { "0": { "name": "punctuation.definition.comment.vibelang" } },
+          "end": "$"
+        },
+        {
+          "name": "comment.block.vibelang",
+          "begin": "/\\*",
+          "beginCaptures": { "0": { "name": "punctuation.definition.comment.begin.vibelang" } },
+          "end": "\\*/",
+          "endCaptures": { "0": { "name": "punctuation.definition.comment.end.vibelang" } }
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.vibelang",
+          "begin": "\"",
+          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.vibelang" } },
+          "end": "\"",
+          "endCaptures": { "0": { "name": "punctuation.definition.string.end.vibelang" } },
+          "patterns": [
+            { "name": "constant.character.escape.vibelang", "match": "\\\\." }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        { "name": "constant.numeric.vibelang", "match": "\\b\\d+(\\.\\d+)?\\b" }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.vibelang",
+          "match": "\\b(let|fn|return|if|else|for|while|prompt|class|type|import|from|as)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        { "name": "storage.type.vibelang", "match": "\\b(Int|Float|String|Bool)\\b" }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        { "name": "constant.language.vibelang", "match": "\\b(true|false)\\b" }
+      ]
+    }
+  }
+}

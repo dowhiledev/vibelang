@@ -129,6 +129,15 @@ gcc -o weather_app weather_app.c -lvibelang
 - Limited error reporting from LLM providers
 - No streaming support for LLM responses yet
 
+## VS Code Extension
+
+A minimal VS Code extension is included in the `vscode` directory. It provides
+syntax highlighting for `.vibe` files. To try it out:
+
+1. Open the `vscode` folder in VS Code.
+2. Press `F5` to launch an Extension Development Host.
+3. Open a VibeLang source file to see the highlighting.
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
