@@ -18,6 +18,13 @@ set(BISON_PARSER_HEADER ${BISON_OUTPUT_DIR}/parser.tab.h)
 set(FLEX_LEXER_SOURCE ${FLEX_OUTPUT_DIR}/lexer.c)
 set(FLEX_LEXER_HEADER ${FLEX_OUTPUT_DIR}/lexer.h)
 
+# Mark these files as generated so CMake doesn't require them at configure time
+set_source_files_properties(
+    ${BISON_PARSER_SOURCE} ${BISON_PARSER_HEADER}
+    ${FLEX_LEXER_SOURCE} ${FLEX_LEXER_HEADER}
+    PROPERTIES GENERATED TRUE
+)
+
 # Generate parser with Bison
 if(BISON_FOUND)
     add_custom_command(
@@ -65,19 +72,13 @@ add_dependencies(generate_lexer generate_parser)
 
 # Add the parser implementation files to the compiler sources
 # Use the full path to avoid relative path issues
-target_sources(vibelang_compiler
-    PRIVATE
+target_sources(vibelang_compiler PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/parser_impl.c
 )
 
-# Add parser files to sources (conditionally)
-if(EXISTS ${BISON_PARSER_SOURCE} AND EXISTS ${FLEX_LEXER_SOURCE})
-    target_sources(vibelang_compiler
-        PRIVATE
-        ${BISON_PARSER_SOURCE}
-        ${FLEX_LEXER_SOURCE}
-    )
-endif()
+# The vibelang_compiler target is defined in the parent directory. Ensure it
+# depends on the generated parser and lexer so they are built automatically.
+add_dependencies(vibelang_compiler generate_parser generate_lexer)
 
 # Include the generated headers in the compiler's include path
 target_include_directories(vibelang_compiler 

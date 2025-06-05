@@ -166,6 +166,18 @@ static void test_function_with_vars() {
   test_codegen("function_with_vars", source);
 }
 
+// Test a function with a variable using a meaning type
+static void test_meaning_var() {
+  const char *source =
+      "type Temperature = Meaning<Int>(\"temperature in Celsius\");\n"
+      "\n"
+      "fn useTemp() {\n"
+      "    let temp: Temperature = 25;\n"
+      "}\n";
+
+  test_codegen("meaning_var", source);
+}
+
 // Main test runner - with simple timeout
 int main() {
   printf("Running code generator tests with timeout protection...\n");
@@ -186,6 +198,15 @@ int main() {
 
   printf("Running test_function_with_vars\n");
   test_function_with_vars();
+
+  // Check timeout again before running the next test
+  if (time(NULL) - start_time > timeout) {
+    printf("ERROR: Tests exceeding timeout limit. Stopping.\n");
+    return 1;
+  }
+
+  printf("Running test_meaning_var\n");
+  test_meaning_var();
 
   printf("All code generator tests completed!\n");
   return 0;

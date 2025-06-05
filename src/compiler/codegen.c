@@ -460,6 +460,16 @@ static int generate_statement(ast_node_t *stmt, FILE *file, int indent) {
         var_type = ast_get_string(stmt->children[i], "type");
         type_node = stmt->children[i];
         break;
+      } else if (stmt->children[i]->type == AST_MEANING_TYPE) {
+        ast_node_t *meaning = stmt->children[i];
+        for (int j = 0; j < meaning->child_count; j++) {
+          if (meaning->children[j]->type == AST_BASIC_TYPE) {
+            var_type = ast_get_string(meaning->children[j], "type");
+            type_node = meaning->children[j];
+            break;
+          }
+        }
+        break;
       }
     }
 
@@ -527,7 +537,8 @@ static int generate_statement(ast_node_t *stmt, FILE *file, int indent) {
     // Find initialization expression
     ast_node_t *init_expr = NULL;
     for (int i = 0; i < stmt->child_count; i++) {
-      if (stmt->children[i]->type != AST_BASIC_TYPE) {
+      if (stmt->children[i]->type != AST_BASIC_TYPE &&
+          stmt->children[i]->type != AST_MEANING_TYPE) {
         init_expr = stmt->children[i];
         break;
       }
