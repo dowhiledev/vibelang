@@ -61,6 +61,8 @@ void log_debug(const char *format, ...) {
   if (current_log_level <= LOG_LEVEL_DEBUG) {
     va_list args;
     va_start(args, format);
+    va_list args_copy;
+    va_copy(args_copy, args);
 
     // Log to file if available
     if (log_file) {
@@ -73,11 +75,12 @@ void log_debug(const char *format, ...) {
     // Also log to stdout for debug messages
     if (getenv("DEBUG_CONSOLE")) {
       printf("\033[36m[DEBUG] "); // Cyan color
-      vprintf(format, args);
+      vprintf(format, args_copy);
       printf("\033[0m\n"); // Reset color
     }
 
     va_end(args);
+    va_end(args_copy);
   }
 }
 
@@ -86,6 +89,8 @@ void log_info(const char *format, ...) {
   if (current_log_level <= LOG_LEVEL_INFO) {
     va_list args;
     va_start(args, format);
+    va_list args_copy;
+    va_copy(args_copy, args);
 
     // Log to file if available
     if (log_file) {
@@ -97,10 +102,11 @@ void log_info(const char *format, ...) {
 
     // Also log to stdout for info messages
     printf("\033[32m[INFO] "); // Green color
-    vprintf(format, args);
+    vprintf(format, args_copy);
     printf("\033[0m\n"); // Reset color
 
     va_end(args);
+    va_end(args_copy);
   }
 }
 
@@ -109,6 +115,8 @@ void log_warn(const char *format, ...) {
   if (current_log_level <= LOG_LEVEL_WARN) {
     va_list args;
     va_start(args, format);
+    va_list args_copy;
+    va_copy(args_copy, args);
 
     // Log to file if available
     if (log_file) {
@@ -120,10 +128,11 @@ void log_warn(const char *format, ...) {
 
     // Also log to stderr for warnings
     fprintf(stderr, "\033[33m[WARN] "); // Yellow color
-    vfprintf(stderr, format, args);
+    vfprintf(stderr, format, args_copy);
     fprintf(stderr, "\033[0m\n"); // Reset color
 
     va_end(args);
+    va_end(args_copy);
   }
 }
 
@@ -132,6 +141,8 @@ void log_error(const char *format, ...) {
   if (current_log_level <= LOG_LEVEL_ERROR) {
     va_list args;
     va_start(args, format);
+    va_list args_copy;
+    va_copy(args_copy, args);
 
     // Log to file if available
     if (log_file) {
@@ -143,9 +154,10 @@ void log_error(const char *format, ...) {
 
     // Always log errors to stderr
     fprintf(stderr, "\033[31m[ERROR] "); // Red color
-    vfprintf(stderr, format, args);
+    vfprintf(stderr, format, args_copy);
     fprintf(stderr, "\033[0m\n"); // Reset color
 
     va_end(args);
+    va_end(args_copy);
   }
 }
