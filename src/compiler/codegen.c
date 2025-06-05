@@ -20,6 +20,7 @@ static int generate_expression(ast_node_t *expr, FILE *file);
 static int generate_type_declaration(ast_node_t *type_decl, FILE *file);
 static int generate_prompt_block(ast_node_t *prompt, FILE *file, int indent);
 static int generate_headers(FILE *file);
+static ast_node_t *find_type_decl(ast_node_t *node, const char *name);
 
 // Helper function to add indentation to the output
 static void add_indent(FILE *file, int indent) {
@@ -87,6 +88,26 @@ static char **extract_variables(const char *template, int *count) {
   }
 
   return variables;
+}
+
+// Recursively search the AST for a type declaration with the given name
+static ast_node_t *find_type_decl(ast_node_t *node, const char *name) {
+  if (!node || !name)
+    return NULL;
+
+  if (node->type == AST_TYPE_DECL) {
+    const char *decl_name = ast_get_string(node, "name");
+    if (decl_name && strcmp(decl_name, name) == 0)
+      return node;
+  }
+
+  for (int i = 0; i < node->child_count; i++) {
+    ast_node_t *found = find_type_decl(node->children[i], name);
+    if (found)
+      return found;
+  }
+
+  return NULL;
 }
 
 /**
@@ -649,8 +670,9 @@ static int generate_prompt_block(ast_node_t *prompt, FILE *file, int indent) {
   int var_count = 0;
   char **variables = extract_variables(template_str, &var_count);
 
-  // Get the expected return type from the parent function
+  // Get the expected return type and meaning from the parent function
   const char *return_type = "char*"; // Default to string
+  const char *meaning_value = NULL;
   ast_node_t *parent = prompt->parent;
   while (parent && parent->type != AST_FUNCTION_DECL) {
     parent = parent->parent;
@@ -668,11 +690,35 @@ static int generate_prompt_block(ast_node_t *prompt, FILE *file, int indent) {
         } else if (strcmp(type_name, "Bool") == 0) {
           return_type = "int";
         }
-        // String remains the default "char*"
+
+        // Check for alias meaning types
+        ast_node_t *root = parent;
+        while (root->parent)
+          root = root->parent;
+        ast_node_t *decl = find_type_decl(root, type_name);
+        if (decl && decl->child_count > 0 &&
+            decl->children[0]->type == AST_MEANING_TYPE) {
+          ast_node_t *meaning_type = decl->children[0];
+          meaning_value = ast_get_string(meaning_type, "meaning");
+          if (meaning_type->child_count > 0 &&
+              meaning_type->children[0]->type == AST_BASIC_TYPE) {
+            const char *base_type =
+                ast_get_string(meaning_type->children[0], "type");
+            if (strcmp(base_type, "Int") == 0) {
+              return_type = "int";
+            } else if (strcmp(base_type, "Float") == 0) {
+              return_type = "double";
+            } else if (strcmp(base_type, "Bool") == 0) {
+              return_type = "int";
+            }
+          }
+        }
+
         break;
       } else if (parent->children[i]->type == AST_MEANING_TYPE) {
         // For Meaning types, use the base type
         ast_node_t *meaning_type = parent->children[i];
+        meaning_value = ast_get_string(meaning_type, "meaning");
         if (meaning_type->child_count > 0) {
           const char *base_type =
               ast_get_string(meaning_type->children[0], "type");
@@ -720,10 +766,14 @@ static int generate_prompt_block(ast_node_t *prompt, FILE *file, int indent) {
   fprintf(file, "char* formatted_prompt = format_prompt(prompt_template, "
                 "var_names, var_values, var_count);\n");
   add_indent(file, indent + 1);
-  fprintf(file,
-          "VibeValue* prompt_result = vibe_execute_prompt(formatted_prompt, "
-          "\"%s\");\n",
-          template_str);
+  if (meaning_value) {
+    fprintf(file,
+            "VibeValue* prompt_result = vibe_execute_prompt(formatted_prompt, \"%s\");\n",
+            meaning_value);
+  } else {
+    fprintf(file,
+            "VibeValue* prompt_result = vibe_execute_prompt(formatted_prompt, NULL);\n");
+  }
   add_indent(file, indent + 1);
   fprintf(file, "\n");
   add_indent(file, indent + 1);

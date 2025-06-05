@@ -7,7 +7,7 @@
 #include <string.h>
 
 // Forward declarations for runtime functions
-extern VibeValue *vibe_execute_prompt(const char *prompt);
+extern VibeValue *vibe_execute_prompt(const char *prompt, const char *meaning);
 extern char *format_prompt(const char *template, char **var_names,
                            char **var_values, int var_count);
 
@@ -28,7 +28,7 @@ int getTemperature(const char *city) {
     var_values[0] = strdup(city ? city : "");
     char *formatted_prompt =
         format_prompt(prompt_template, var_names, var_values, var_count);
-    prompt_result = vibe_execute_prompt(formatted_prompt);
+    prompt_result = vibe_execute_prompt(formatted_prompt, "temperature in Celsius");
     if (prompt_result) {
       // Convert LLM response to the appropriate return type
       return vibe_value_get_int(prompt_result);
