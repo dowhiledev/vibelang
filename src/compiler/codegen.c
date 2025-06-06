@@ -817,7 +817,7 @@ static int generate_prompt_block(ast_node_t *prompt, FILE *file, int indent) {
     fprintf(file, "return vibe_get_bool(&prompt_result);\n");
   } else {
     // Default to string
-    fprintf(file, "return vibe_get_string(&prompt_result);\n");
+    fprintf(file, "return (char*)vibe_get_string(&prompt_result);\n");
   }
 
   add_indent(file, indent);

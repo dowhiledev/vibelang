@@ -7,7 +7,7 @@
 #include <string.h>
 
 // Forward declarations for runtime functions
-extern VibeValue *vibe_execute_prompt(const char *prompt);
+extern VibeValue vibe_execute_prompt(const char *prompt, const char *meaning);
 extern char *format_prompt(const char *template, char **var_names,
                            char **var_values, int var_count);
 
