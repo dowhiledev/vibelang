@@ -66,6 +66,12 @@ target_link_libraries(test_llm_integration
 add_test(NAME test_llm_integration
          COMMAND test_llm_integration)
 
+# Test that vibec embeds the correct rpath in generated shared libraries
+add_executable(test_vibec_rpath
+  unit/test_vibec_rpath.c
+)
+add_test(NAME test_vibec_rpath COMMAND test_vibec_rpath)
+
 # Create test data directory during build
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/unit/data)
 

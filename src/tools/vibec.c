@@ -291,15 +291,15 @@ int main(int argc, char *argv[]) {
     prefix = "/usr/local";
   }
 
-  char rpath[256];
+  char rpath[512];
 #ifdef __APPLE__
   /*
-   * libvibelang is built with an install name of @rpath/libvibelang.dylib.
-   * Provide the install prefix as an rpath so the loader can locate the
-   * library without additional flags. We avoid @loader_path here because the
-   * library typically lives in the install prefix, not beside the plugin.
+   * On macOS the runtime looks for libvibelang via @rpath. Embed both the
+   * install prefix and the plugin directory so users do not need to specify
+   * additional linker flags.
    */
-  snprintf(rpath, sizeof(rpath), "-Wl,-rpath,%s/lib", prefix);
+  snprintf(rpath, sizeof(rpath),
+           "-Wl,-rpath,%s/lib -Wl,-rpath,@loader_path", prefix);
 #else
   snprintf(rpath, sizeof(rpath), "-Wl,-rpath,%s/lib", prefix);
 #endif
