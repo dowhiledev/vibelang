@@ -15,6 +15,7 @@ This directory contains sample `.vibe` programs that can be compiled with `vibec
    vibec joke.vibe
    # joke.c contains the generated function
    gcc -o joke_app joke_app.c joke.c -lvibelang
+   # vibec also produces joke.so for dynamic loading
    ./joke_app <topic>
    ```
    The program will print a short joke about the given topic.

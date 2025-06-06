@@ -122,6 +122,7 @@ vibec weather.vibe
 # weather.c contains the generated functions
 # compile it together with your application code
 gcc -o weather_app my_app.c weather.c -lvibelang
+# vibec also produces weather.so for dynamic loading
 ```
 
 ## Known Issues
