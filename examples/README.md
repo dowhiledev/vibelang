@@ -46,3 +46,24 @@ locate `libvibelang`. You can set `LD_LIBRARY_PATH` (or `DYLD_LIBRARY_PATH`
        -Wl,-rpath,/usr/local/lib
    ```
    The program will print a short joke about the given topic.
+
+## Using the Python helpers
+
+The `python` directory contains a small helper package that can compile and load
+`.vibe` files directly from Python. The two main functions are
+`vibelang.compile()` and `vibelang.load()`.
+
+```python
+from vibelang import compile, load
+
+# Compile a VibeLang file using vibec
+so_file = compile("joke.vibe")
+
+# Load the shared library and call the generated function
+module = load("joke.vibe")
+print(module.tellJoke(b"computers"))
+```
+
+`load()` ensures the runtime library `libvibelang` is available. If it is not in
+a system search path, set `VIBELANG_LIB_DIR` (or `LD_LIBRARY_PATH`/`DYLD_LIBRARY_PATH`)
+to the directory containing the library.

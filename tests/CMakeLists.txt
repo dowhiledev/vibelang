@@ -77,3 +77,9 @@ foreach(TEST_DATA_FILE ${TEST_DATA_FILES})
   get_filename_component(TEST_DATA_FILE_NAME ${TEST_DATA_FILE} NAME)
   configure_file(${TEST_DATA_FILE} ${CMAKE_BINARY_DIR}/tests/unit/data/${TEST_DATA_FILE_NAME} COPYONLY)
 endforeach()
+
+# Python helper tests
+add_test(
+    NAME python_helpers
+    COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/python/test_python_helpers.py
+)
