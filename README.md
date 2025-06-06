@@ -115,12 +115,13 @@ fn getForecast(city: String, day: String) -> Forecast {
 }
 ```
 
-Compile and use it:
+Compile it and integrate the generated C file into your own program:
 
 ```bash
 vibec weather.vibe
-gcc -o weather_app weather_app.c -lvibelang
-./weather_app
+# weather.c contains the generated functions
+# compile it together with your application code
+gcc -o weather_app my_app.c weather.c -lvibelang
 ```
 
 ## Known Issues

@@ -13,7 +13,8 @@ This directory contains sample `.vibe` programs that can be compiled with `vibec
 2. Compile the example and run:
    ```bash
    vibec joke.vibe
-   gcc -o joke_app joke_app.c -lvibelang
+   # joke.c contains the generated function
+   gcc -o joke_app joke_app.c joke.c -lvibelang
    ./joke_app <topic>
    ```
    The program will print a short joke about the given topic.
