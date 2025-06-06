@@ -116,7 +116,12 @@ add_library(vibelang SHARED
 
 # Add dependencies
 target_link_libraries(vibelang_utils PRIVATE ${CJSON_LIBRARIES})
-target_link_libraries(vibelang_runtime PRIVATE vibelang_utils ${CJSON_LIBRARIES} ${CURL_LIBRARIES})
+target_link_libraries(vibelang_runtime PRIVATE
+  vibelang_utils
+  vibelang_compiler
+  ${CJSON_LIBRARIES}
+  ${CURL_LIBRARIES}
+)
 target_link_libraries(vibelang_compiler PRIVATE vibelang_utils)
 target_link_libraries(vibelang PUBLIC 
   vibelang_utils 
