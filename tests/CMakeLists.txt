@@ -57,14 +57,16 @@ add_executable(test_llm_integration
 )
 
 # Link against the library
-target_link_libraries(test_llm_integration 
-  vibelang_runtime
-  vibelang_utils
+target_link_libraries(test_llm_integration
+  vibelang
 )
 
 # Add to CTest test suite
 add_test(NAME test_llm_integration
          COMMAND test_llm_integration)
+set_tests_properties(test_llm_integration PROPERTIES
+  ENVIRONMENT "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib"
+)
 
 # Create test data directory during build
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/unit/data)
