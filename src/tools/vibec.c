@@ -293,7 +293,13 @@ int main(int argc, char *argv[]) {
 
   char rpath[256];
 #ifdef __APPLE__
-  snprintf(rpath, sizeof(rpath), "-Wl,-rpath,@loader_path");
+  /*
+   * libvibelang is built with an install name of @rpath/libvibelang.dylib.
+   * Provide the install prefix as an rpath so the loader can locate the
+   * library without additional flags. We avoid @loader_path here because the
+   * library typically lives in the install prefix, not beside the plugin.
+   */
+  snprintf(rpath, sizeof(rpath), "-Wl,-rpath,%s/lib", prefix);
 #else
   snprintf(rpath, sizeof(rpath), "-Wl,-rpath,%s/lib", prefix);
 #endif
