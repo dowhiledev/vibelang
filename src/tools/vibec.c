@@ -272,7 +272,7 @@ int main(int argc, char *argv[]) {
 
   // Also build a shared library for runtime loading
   size_t out_len = strlen(output_file);
-  char *lib_file = malloc(out_len + 1);
+  char *lib_file = malloc(out_len + 4); // room for replacing .c with .so
   if (!lib_file) {
     ERROR("Memory allocation failed");
     vibelang_shutdown();
@@ -288,9 +288,12 @@ int main(int argc, char *argv[]) {
 
   char cmd[512];
   snprintf(cmd, sizeof(cmd),
-           "gcc -shared -fPIC %s -o %s -lvibelang >/dev/null 2>&1",
+           "gcc -shared -fPIC %s -o %s -lvibelang",
            output_file, lib_file);
   INFO("Building shared library %s", lib_file);
+  if (options.verbose) {
+    INFO("Running: %s", cmd);
+  }
   if (system(cmd) != 0) {
     WARNING("Failed to build shared library with gcc");
   } else {

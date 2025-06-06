@@ -84,6 +84,14 @@ const char *vibe_get_string(VibeValue *value);
 double vibe_get_number(VibeValue *value);
 
 /**
+ * Get integer value from a VibeValue
+ *
+ * @param value The value to extract from
+ * @return The integer value or 0 if not convertible
+ */
+int vibe_value_get_int(VibeValue *value);
+
+/**
  * Get boolean value from a VibeValue
  *
  * @param value The value to extract from

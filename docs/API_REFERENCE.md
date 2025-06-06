@@ -150,7 +150,7 @@ Gets a boolean value.
 
 **Returns:** The boolean value, or 0 if not a boolean.
 
-### `long long vibe_value_get_int(const VibeValue* value)`
+### `int vibe_value_get_int(const VibeValue* value)`
 
 Gets an integer value. Will convert from other numeric types if possible.
 

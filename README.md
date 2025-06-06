@@ -125,6 +125,17 @@ gcc -o weather_app my_app.c weather.c -lvibelang
 # vibec also produces weather.so for dynamic loading
 ```
 
+The system needs to locate `libvibelang` at runtime. Either install it in a
+standard library path, set the environment variable `LD_LIBRARY_PATH` (or
+`DYLD_LIBRARY_PATH` on macOS) to include the installation directory, or compile
+with an rpath:
+
+```bash
+gcc -o weather_app my_app.c weather.c -lvibelang \
+    -Wl,-rpath,/usr/local/lib
+```
+Replace `/usr/local/lib` with the prefix used during installation.
+
 ## Known Issues
 
 - Function overloading is not yet supported

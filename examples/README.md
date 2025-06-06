@@ -18,4 +18,13 @@ This directory contains sample `.vibe` programs that can be compiled with `vibec
    # vibec also produces joke.so for dynamic loading
    ./joke_app <topic>
    ```
+   If `joke_app` fails to launch with a message like
+   `Library not loaded: @rpath/libvibelang.dylib`, make sure the runtime can
+   locate `libvibelang`. You can set `LD_LIBRARY_PATH` (or `DYLD_LIBRARY_PATH`
+   on macOS) to the install directory or link with an rpath:
+
+   ```bash
+   gcc -o joke_app joke_app.c joke.c -lvibelang \
+       -Wl,-rpath,/usr/local/lib
+   ```
    The program will print a short joke about the given topic.
