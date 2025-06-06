@@ -125,6 +125,24 @@ gcc -o weather_app my_app.c weather.c -lvibelang
 # vibec also produces weather.so for dynamic loading
 ```
 
+Before calling any generated functions, initialize the runtime:
+
+```c
+#include <runtime.h>
+
+int main() {
+    if (vibe_runtime_init() != VIBE_SUCCESS) {
+        fprintf(stderr, "Failed to start runtime\n");
+        return 1;
+    }
+
+    /* call generated functions here */
+
+    vibe_runtime_shutdown();
+    return 0;
+}
+```
+
 The system needs to locate `libvibelang` at runtime. Either install it in a
 standard library path, set the environment variable `LD_LIBRARY_PATH` (or
 `DYLD_LIBRARY_PATH` on macOS) to include the installation directory, or compile
