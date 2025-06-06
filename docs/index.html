@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VibeLang - Natural Language Programming</title>
-    
+    <title>VibeLang - A Statically-Typed Language for AI Interactions</title>
+    <meta name="description"
+        content="VibeLang is a statically-typed language designed for natural language interactions with LLM models. Type-safe AI integration for modern applications.">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -14,646 +17,1224 @@
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-    
+    <!-- Three.js CanvasRenderer -->
+    <script>
+        // Simplified CanvasRenderer for particle waves
+        THREE.CanvasRenderer = function (parameters) {
+            parameters = parameters || {};
+
+            var _this = this;
+            var _canvas = parameters.canvas !== undefined ? parameters.canvas : document.createElement('canvas');
+            var _context = _canvas.getContext('2d', { alpha: parameters.alpha === true });
+            var _clearColor = new THREE.Color(0x000000);
+            var _clearAlpha = 0;
+
+            this.domElement = _canvas;
+            this.autoClear = true;
+
+            this.setSize = function (width, height, updateStyle) {
+                _canvas.width = width;
+                _canvas.height = height;
+
+                if (updateStyle !== false) {
+                    _canvas.style.width = width + 'px';
+                    _canvas.style.height = height + 'px';
+                }
+            };
+
+            this.setPixelRatio = function (value) {
+                // Handle pixel ratio if needed
+            };
+
+            this.setClearColor = function (color, alpha) {
+                _clearColor.set(color);
+                _clearAlpha = alpha !== undefined ? alpha : 1;
+            };
+
+            this.clear = function () {
+                if (_clearAlpha > 0) {
+                    _context.fillStyle = 'rgba(' +
+                        Math.floor(_clearColor.r * 255) + ',' +
+                        Math.floor(_clearColor.g * 255) + ',' +
+                        Math.floor(_clearColor.b * 255) + ',' + _clearAlpha + ')';
+                    _context.fillRect(0, 0, _canvas.width, _canvas.height);
+                } else {
+                    _context.clearRect(0, 0, _canvas.width, _canvas.height);
+                }
+            };
+
+            this.render = function (scene, camera) {
+                if (this.autoClear === true) {
+                    this.clear();
+                }
+
+                // Simple sprite rendering for particle wave
+                var canvasWidth = _canvas.width;
+                var canvasHeight = _canvas.height;
+                var canvasWidthHalf = canvasWidth / 2;
+                var canvasHeightHalf = canvasHeight / 2;
+
+                _context.save();
+                _context.translate(canvasWidthHalf, canvasHeightHalf);
+
+                scene.children.forEach(function (child) {
+                    if (child instanceof THREE.Sprite && child.material.isSpriteCanvasMaterial) {
+                        var position = child.position.clone();
+                        position.project(camera);
+
+                        var x = position.x * canvasWidthHalf;
+                        var y = -position.y * canvasHeightHalf;
+
+                        if (position.z > -1 && position.z < 1) {
+                            _context.save();
+                            _context.translate(x, y);
+                            _context.scale(child.scale.x, child.scale.y);
+
+                            // Set color
+                            var color = child.material.color;
+                            _context.fillStyle = 'rgb(' +
+                                Math.floor(color.r * 255) + ',' +
+                                Math.floor(color.g * 255) + ',' +
+                                Math.floor(color.b * 255) + ')';
+
+                            // Execute material program
+                            child.material.program(_context);
+
+                            _context.restore();
+                        }
+                    }
+                });
+
+                _context.restore();
+            };
+        };
+    </script>
+
+    <!-- Custom Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
     <style>
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
+        body {
+            font-family: 'Inter', sans-serif;
         }
-        ::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.2);
+
+        .gradient-text {
+            background: linear-gradient(135deg, #000000 0%, #4B5563 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(45deg, #ff0080, #00ffff);
-            border-radius: 4px;
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
         }
-        
-        /* Glitch effect */
-        .glitch {
-            position: relative;
-            animation: glitch 2s infinite;
+
+        .feature-card {
+            transition: all 0.3s ease;
         }
-        
-        .glitch::before,
-        .glitch::after {
-            content: attr(data-text);
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .bounce-in {
+            animation: bounceIn 1s ease-out;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 0.8;
+            }
+
+            70% {
+                transform: scale(0.9);
+                opacity: 0.9;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .node-animation {
+            animation: nodeFloat 8s ease-in-out infinite;
+        }
+
+        @keyframes nodeFloat {
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            33% {
+                transform: translateY(-15px) rotate(120deg);
+            }
+
+            66% {
+                transform: translateY(10px) rotate(240deg);
+            }
+        }
+
+        /* Particle Wave Background Styles */
+        #particle-canvas {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-        }
-        
-        .glitch::before {
-            animation: glitch-1 0.5s infinite;
-            color: #ff0080;
-            z-index: -1;
-        }
-        
-        .glitch::after {
-            animation: glitch-2 0.5s infinite;
-            color: #00ffff;
-            z-index: -2;
-        }
-        
-        @keyframes glitch {
-            0%, 90%, 100% {
-                transform: translate(0);
-            }
-            10% {
-                transform: translate(-2px, 1px);
-            }
-            20% {
-                transform: translate(2px, -1px);
-            }
-            30% {
-                transform: translate(-1px, 2px);
-            }
-            40% {
-                transform: translate(1px, -2px);
-            }
-            50% {
-                transform: translate(-2px, 1px);
-            }
-            60% {
-                transform: translate(2px, -1px);
-            }
-            70% {
-                transform: translate(-1px, 2px);
-            }
-            80% {
-                transform: translate(1px, -2px);
-            }
-        }
-        
-        @keyframes glitch-1 {
-            0%, 100% {
-                transform: translate(0);
-            }
-            20% {
-                transform: translate(-2px, 2px);
-            }
-            40% {
-                transform: translate(-2px, -2px);
-            }
-            60% {
-                transform: translate(2px, 2px);
-            }
-            80% {
-                transform: translate(2px, -2px);
-            }
-        }
-        
-        @keyframes glitch-2 {
-            0%, 100% {
-                transform: translate(0);
-            }
-            20% {
-                transform: translate(2px, 0);
-            }
-            40% {
-                transform: translate(-2px, 0);
-            }
-            60% {
-                transform: translate(0, 2px);
-            }
-            80% {
-                transform: translate(0, -2px);
-            }
-        }
-        
-        /* Neon glow effect */
-        .neon-glow {
-            text-shadow: 
-                0 0 5px currentColor,
-                0 0 10px currentColor,
-                0 0 15px currentColor,
-                0 0 20px currentColor;
-        }
-        
-        /* Typing animation */
-        .typing {
-            overflow: hidden;
-            border-right: 2px solid #00ffff;
-            animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
-        }
-        
-        @keyframes typing {
-            from { width: 0 }
-            to { width: 100% }
-        }
-        
-        @keyframes blink-caret {
-            from, to { border-color: transparent }
-            50% { border-color: #00ffff }
-        }
-        
-        /* Code block styling */
-        .code-block {
-            background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(30,30,60,0.8));
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            box-shadow: 
-                0 0 20px rgba(0, 255, 255, 0.1),
-                inset 0 0 20px rgba(255, 0, 128, 0.05);
-        }
-        
-        /* Retro grid */
-        .retro-grid {
-            background-image: 
-                linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-        }
-        
-        /* Floating elements */
-        .float {
-            animation: float 6s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-        
-        /* Canvas styling */
-        #background-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -10;
-        }
-        
-        /* Content overlay */
-        .content-overlay {
-            background: linear-gradient(
-                rgba(0, 0, 0, 0.7),
-                rgba(0, 0, 0, 0.8),
-                rgba(0, 0, 0, 0.9)
-            );
-        }
-        
-        /* Logo styles */
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .logo-svg {
-            width: 120px;
-            height: 30px;
-            filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.5));
-        }
-        
-        /* Floating thug glasses */
-        .floating-glasses {
-            position: fixed;
-            opacity: 0.15;
-            animation: float 8s ease-in-out infinite;
             z-index: 1;
-            width: 60px;
-            height: 20px;
+            pointer-events: none;
         }
-        
-        .floating-glasses img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
         }
-        
-        .floating-glasses:nth-child(1) { 
-            top: 20%; 
-            right: 10%; 
-            animation-delay: 0s; 
-        }
-        .floating-glasses:nth-child(2) { 
-            top: 60%; 
-            left: 5%; 
-            animation-delay: 2s; 
-        }
-        .floating-glasses:nth-child(3) { 
-            top: 80%; 
-            right: 20%; 
-            animation-delay: 4s; 
-        }
-        
-        /* Deal with it text */
-        .deal-with-it {
+
+        /* Thug Glasses Animation Styles */
+        .thug-glasses {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            font-family: 'Orbitron', monospace;
-            font-weight: bold;
-            font-size: 14px;
-            color: #00ffff;
-            text-shadow: 0 0 10px #00ffff;
+            width: 80px;
+            height: auto;
+            z-index: 9999;
+            pointer-events: none;
             opacity: 0;
-            animation: dealWithIt 10s infinite;
-            z-index: 1000;
+            transform: scale(0) rotate(0deg);
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
-        
-        @keyframes dealWithIt {
-            0%, 80%, 100% { opacity: 0; transform: translateY(20px); }
-            85%, 95% { opacity: 1; transform: translateY(0); }
+
+        .thug-glasses.show {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+        }
+
+        .thug-glasses.wiggle {
+            animation: thugWiggle 1s ease-in-out;
+        }
+
+        @keyframes thugWiggle {
+            0% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.1) rotate(-15deg); }
+            50% { transform: scale(1.2) rotate(0deg); }
+            75% { transform: scale(1.1) rotate(15deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .thug-glasses.fade-out {
+            opacity: 0;
+            transform: scale(0.5) rotate(180deg);
         }
     </style>
 </head>
-<body class="bg-black text-white overflow-x-hidden">
-    <!-- Background Canvas -->
-    <canvas id="background-canvas"></canvas>
-    
-    <!-- Floating Thug Life Glasses -->
-    <div class="floating-glasses">
-        <img src="thug-glass.png" alt="Thug Glasses">
-    </div>
-    <div class="floating-glasses">
-        <img src="thug-glass.png" alt="Thug Glasses">
-    </div>
-    <div class="floating-glasses">
-        <img src="thug-glass.png" alt="Thug Glasses">
-    </div>
-    
-    <!-- Deal with it text -->
-    <div class="deal-with-it">
-        DEAL WITH IT 😎
-    </div>
-    
-    <!-- Content Overlay -->
-    <div class="content-overlay min-h-screen">
-        <!-- Header -->
-        <nav class="fixed top-0 w-full z-50 bg-black bg-opacity-80 backdrop-blur-sm border-b border-cyan-500 border-opacity-30">
-            <div class="container mx-auto px-6 py-4">
-                <div class="flex items-center justify-between">
-                    <div class="logo-container relative">
-                        <svg class="logo-svg text-cyan-400" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
-                            <text x="213.8" y="391.3" font-family="Gill Sans" font-size="300" fill="currentColor">VibeLang</text>
-                            <g>
-                                <path d="M -646.3 290.5 h 30 v 30 h -30 z" fill="currentColor"/>
-                                <path d="M -1006.3 260.5 h 60 v 30 h -60 z" fill="currentColor"/>
-                                <path fill="currentColor" d="M -946.3 230.5 v 30 h 180 v 30 h 30 v 30 h 30 v 30 h 30 v 30 h 210 v -30 h 30 v -30 h 30 v -30 h 60 v 30 h 30 v 30 h 210 v -30 h 30 v -30 h 30 v -60 z m 390 120 h -30 v -30 h -30 v 30 h -30 v -30 h -30 v -30 h -30 v -30 h 30 v 30 h 30 v -30 h 30 v 30 h 30 v 30 h 30 z m 360 -30 h -30 v -30 h -30 v 30 h -30 v -30 h -30 v -30 h 30 v 30 h 30 v -30 h 30 v 30 h 30 z"/>
-                            </g>
-                        </svg>
-                        <div class="flex flex-col">
-                            <div class="text-sm text-cyan-400 opacity-70">v0.1.0</div>
+
+<body class="bg-white text-black antialiased">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <img src="icon-dark.svg" alt="VibeLang" class="h-8 w-auto">
+                </div>
+
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#features" class="text-gray-700 hover:text-black transition-colors">Features</a>
+                    <a href="#examples" class="text-gray-700 hover:text-black transition-colors">Examples</a>
+                    <a href="#get-started" class="text-gray-700 hover:text-black transition-colors">Get Started</a>
+                    <a href="https://dowhiledev.github.io/vibelang/" target="_blank" class="text-gray-700 hover:text-black transition-colors">Documentation</a>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <a href="https://github.com/dowhiledev/vibelang" target="_blank"
+                        class="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors">
+                        <i data-lucide="github" class="w-5 h-5 inline mr-2"></i>
+                        GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient pt-24 pb-16 min-h-screen flex items-center relative overflow-hidden">
+        <!-- Particle Wave Background -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hero-content">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-8 fade-in">
+                    <!-- Announcement -->
+                    <div class="inline-flex items-center bg-gray-100 rounded-full px-4 py-2 text-sm">
+                        <span class="bg-black text-white text-xs px-2 py-1 rounded-full mr-3">MILESTONE 4</span>
+                        <span>Cross-Language Support & Python Wrappers</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
+                    </div>
+
+                    <!-- Main Headline -->
+                    <div class="space-y-10 lg:space-y-14">
+                        <h1 class="text-4xl lg:text-5xl font-bold leading-relaxed lg:leading-[1.15]">
+                            Type-Safe<br>
+                            <span class="bg-black text-white rounded px-2 py-1">AI Interactions</span> with<br>
+                            <span class="bg-black text-white rounded px-2 py-1 text-5xl lg:text-6xl font-bold leading-relaxed lg:leading-[1.4]">VibeLang</span>
+                        </h1>
+
+                        <p class="text-xl text-gray-600 max-w-2xl leading-relaxed lg:mt-6">
+                            A statically-typed language designed for natural language interactions with LLM models. 
+                            Build AI-powered applications with the safety and reliability of traditional programming languages.
+                        </p>
+                    </div>
+
+                    <!-- CTA Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <a href="#get-started"
+                            class="bg-black text-white px-8 py-4 rounded-lg hover:bg-gray-800 transition-all transform hover:scale-105 text-center font-medium">
+                            Get Started
+                        </a>
+                        <a href="https://github.com/dowhiledev/vibelang"
+                            class="border-2 border-black text-black px-8 py-4 rounded-lg hover:bg-black hover:text-white transition-all text-center font-medium">
+                            <i data-lucide="github" class="w-5 h-5 inline mr-2"></i>
+                            View on GitHub
+                        </a>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="flex flex-wrap items-center gap-6 text-sm text-gray-600">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-black"></i>
+                            <span>Open Source</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-black"></i>
+                            <span>Statically Typed</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-black"></i>
+                            <span>LLM Integration</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-black"></i>
+                            <span>Production Ready</span>
                         </div>
                     </div>
-                    <div class="hidden md:flex items-center space-x-8">
-                        <a href="#features" class="hover:text-cyan-400 transition-colors">Features</a>
-                        <a href="#docs" class="hover:text-pink-400 transition-colors">Docs</a>
-                        <a href="#examples" class="hover:text-cyan-400 transition-colors">Examples</a>
-                        <a href="https://github.com/dowhiledev/vibelang" class="bg-gradient-to-r from-cyan-500 to-pink-500 px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
-                            <i data-lucide="github" class="inline w-4 h-4 mr-2"></i>
-                            GitHub
+                </div>
+
+                <!-- Right side content placeholder for lg screens -->
+                <div class="hidden lg:block">
+                    <!-- Click to Copy Component -->
+                    <div class="bg-black rounded-lg p-6 font-mono text-sm space-y-3 max-w-md">
+                        <div class="text-white transition-colors mb-4 text-xs uppercase tracking-wide cursor-default">VibeLang Setup in Minutes</div>
+
+                        <!-- Command 1: Install -->
+                        <div class="group relative">
+                            <div class="flex items-center justify-between bg-gray-900 rounded-lg p-3 cursor-pointer hover:bg-gray-800 transition-colors" onclick="copyCommand('git clone https://github.com/dowhiledev/vibelang.git', this)">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-gray-500">$</span>
+                                    <span class="text-green-400">git clone vibelang</span>
+                                </div>
+                                <i data-lucide="copy" class="w-4 h-4 text-gray-400 group-hover:text-white transition-colors"></i>
+                            </div>
+                        </div>
+
+                        <!-- Command 2: Build -->
+                        <div class="group relative">
+                            <div class="flex items-center justify-between bg-gray-900 rounded-lg p-3 cursor-pointer hover:bg-gray-800 transition-colors" onclick="copyCommand('make', this)">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-gray-500">$</span>
+                                    <span class="text-green-400">make</span>
+                                </div>
+                                <i data-lucide="copy" class="w-4 h-4 text-gray-400 group-hover:text-white transition-colors"></i>
+                            </div>
+                        </div>
+
+                        <!-- Command 3: Compile -->
+                        <div class="group relative">
+                            <div class="flex items-center justify-between bg-gray-900 rounded-lg p-3 cursor-pointer hover:bg-gray-800 transition-colors" onclick="copyCommand('vibec weather.vibe', this)">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-gray-500">$</span>
+                                    <span class="text-green-400">vibec weather.vibe</span>
+                                </div>
+                                <i data-lucide="copy" class="w-4 h-4 text-gray-400 group-hover:text-white transition-colors"></i>
+                            </div>
+                        </div>
+
+                        <!-- Copy feedback -->
+                        <div id="copyFeedback" class="text-center text-xs text-gray-400 opacity-0 transition-opacity">
+                            Copied to clipboard!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <canvas id="particle-canvas"></canvas>
+
+
+    </section>
+
+    <!-- Problem/Solution Section -->
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl lg:text-5xl font-bold mb-6">
+                    Type Safety for AI Interactions
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Stop guessing what your AI functions return. VibeLang brings static typing to LLM interactions.
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Other Frameworks -->
+                <div class="space-y-6">
+                    <div class="bg-white border border-gray-200 rounded-lg p-8">
+                        <div class="flex items-center mb-4">
+                            <i data-lucide="alert-circle" class="w-6 h-6 text-gray-600 mr-3"></i>
+                            <h3 class="text-xl font-semibold text-gray-800">Traditional AI Integration</h3>
+                        </div>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-center">
+                                <i data-lucide="x" class="w-4 h-4 text-gray-400 mr-3"></i>
+                                String-based prompt templates
+                            </li>
+                            <li class="flex items-center">
+                                <i data-lucide="x" class="w-4 h-4 text-gray-400 mr-3"></i>
+                                No type safety for LLM responses
+                            </li>
+                            <li class="flex items-center">
+                                <i data-lucide="x" class="w-4 h-4 text-gray-400 mr-3"></i>
+                                Runtime errors from malformed prompts
+                            </li>
+                            <li class="flex items-center">
+                                <i data-lucide="x" class="w-4 h-4 text-gray-400 mr-3"></i>
+                                Complex API integration code
+                            </li>
+                            <li class="flex items-center">
+                                <i data-lucide="x" class="w-4 h-4 text-gray-400 mr-3"></i>
+                                Hard to maintain and debug
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- NOMOS -->
+                <div class="space-y-6">
+                    <div class="bg-white border-2 border-black rounded-lg p-8">
+                        <div class="flex items-center mb-4">
+                            <i data-lucide="shield-check" class="w-6 h-6 text-black mr-3"></i>
+                            <h3 class="text-xl font-semibold text-black">VibeLang</h3>
+                        </div>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-center">
+                                <i data-lucide="check" class="w-4 h-4 text-black mr-3"></i>
+                                Statically-typed language constructs
+                            </li>
+                            <li class="flex items-center">
+                                <i data-lucide="check" class="w-4 h-4 text-black mr-3"></i>
+                                Type-safe LLM response handling
+                            </li>
+                            <li class="flex items-center">
+                                <i data-lucide="check" class="w-4 h-4 text-black mr-3"></i>
+                                Compile-time prompt validation
+                            </li>
+                            <li class="flex items-center">
+                                <i data-lucide="check" class="w-4 h-4 text-black mr-3"></i>
+                                Native semantic meaning types
+                            </li>
+                            <li class="flex items-center">
+                                <i data-lucide="check" class="w-4 h-4 text-black mr-3"></i>
+                                Easy C and Python integration
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl lg:text-5xl font-bold mb-6">
+                    Language Features for AI Development
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    From type safety to semantic meaning, VibeLang provides everything you need for robust AI applications.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1: Static Typing -->
+                <div class="feature-card bg-white border border-gray-200 rounded-lg p-8 text-center">
+                    <div class="w-16 h-16 bg-black rounded-lg flex items-center justify-center mx-auto mb-6">
+                        <i data-lucide="shield" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-4">Static Type System</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Catch errors at compile time with a robust type system designed for AI interactions and semantic meaning.
+                    </p>
+                </div>
+
+                <!-- Feature 2: Semantic Types -->
+                <div class="feature-card bg-white border border-gray-200 rounded-lg p-8 text-center">
+                    <div class="w-16 h-16 bg-black rounded-lg flex items-center justify-center mx-auto mb-6">
+                        <i data-lucide="brain" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-4">Semantic Meaning Types</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Define types with semantic meaning like Temperature, Sentiment, or Analysis for better AI understanding.
+                    </p>
+                </div>
+
+                <!-- Feature 3: LLM Integration -->
+                <div class="feature-card bg-white border border-gray-200 rounded-lg p-8 text-center">
+                    <div class="w-16 h-16 bg-black rounded-lg flex items-center justify-center mx-auto mb-6">
+                        <i data-lucide="zap" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-4">Native LLM Integration</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Built-in prompt execution with automatic variable substitution and provider abstraction.
+                    </p>
+                </div>
+
+                <!-- Feature 4: C API -->
+                <div class="feature-card bg-white border border-gray-200 rounded-lg p-8 text-center">
+                    <div class="w-16 h-16 bg-black rounded-lg flex items-center justify-center mx-auto mb-6">
+                        <i data-lucide="code" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-4">C API Exposure</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Compiled VibeLang modules expose clean C APIs for easy integration with existing systems.
+                    </p>
+                </div>
+
+                <!-- Feature 5: Runtime Library -->
+                <div class="feature-card bg-white border border-gray-200 rounded-lg p-8 text-center">
+                    <div class="w-16 h-16 bg-black rounded-lg flex items-center justify-center mx-auto mb-6">
+                        <i data-lucide="play" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-4">Comprehensive Runtime</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Complete runtime library with LLM connection management and module loading capabilities.
+                    </p>
+                </div>
+
+                <!-- Feature 6: Cross-Language -->
+                <div class="feature-card bg-white border border-gray-200 rounded-lg p-8 text-center">
+                    <div class="w-16 h-16 bg-black rounded-lg flex items-center justify-center mx-auto mb-6">
+                        <i data-lucide="layers" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-4">Cross-Language Support</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Python wrappers and bindings for seamless integration with your existing tech stack.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Visualization -->
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl lg:text-5xl font-bold mb-6">
+                    Simple Syntax, Powerful Semantics
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    See how VibeLang transforms AI interactions into type-safe, maintainable code.
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Code Example -->
+                <div class="bg-white rounded-lg p-8 shadow-lg">
+                    <h3 class="text-xl font-semibold mb-6 text-center">VibeLang Code Example</h3>
+
+                    <!-- Code Block -->
+                    <div class="bg-gray-900 rounded-lg p-6 font-mono text-sm text-white">
+                        <div class="space-y-2">
+                            <div><span class="text-blue-400">type</span> <span class="text-yellow-400">Temperature</span> = <span class="text-green-400">Meaning</span>&lt;<span class="text-blue-400">Int</span>&gt;(<span class="text-red-400">"temperature in Celsius"</span>);</div>
+                            <div><span class="text-blue-400">type</span> <span class="text-yellow-400">Forecast</span> = <span class="text-green-400">Meaning</span>&lt;<span class="text-blue-400">String</span>&gt;(<span class="text-red-400">"weather forecast"</span>);</div>
+                            <div class="mt-4"></div>
+                            <div><span class="text-blue-400">fn</span> <span class="text-yellow-400">getTemperature</span>(city: <span class="text-blue-400">String</span>) -&gt; <span class="text-yellow-400">Temperature</span> {</div>
+                            <div class="ml-4"><span class="text-blue-400">prompt</span> <span class="text-red-400">"What is the temperature in {city}?"</span>;</div>
+                            <div>}</div>
+                            <div class="mt-4"></div>
+                            <div><span class="text-blue-400">fn</span> <span class="text-yellow-400">getForecast</span>(city: <span class="text-blue-400">String</span>) -&gt; <span class="text-yellow-400">Forecast</span> {</div>
+                            <div class="ml-4"><span class="text-blue-400">prompt</span> <span class="text-red-400">"Forecast for {city}?"</span>;</div>
+                            <div>}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Benefits -->
+                <div class="space-y-6">
+                    <div class="bg-white rounded-lg p-6 border border-gray-200">
+                        <div class="flex items-center mb-4">
+                            <i data-lucide="shield" class="w-6 h-6 text-black mr-3"></i>
+                            <h4 class="font-semibold">Type Safety</h4>
+                        </div>
+                        <p class="text-gray-600">
+                            Define semantic types that give meaning to your data. The compiler ensures type correctness throughout your program.
+                        </p>
+                    </div>
+
+                    <div class="bg-white rounded-lg p-6 border border-gray-200">
+                        <div class="flex items-center mb-4">
+                            <i data-lucide="zap" class="w-6 h-6 text-black mr-3"></i>
+                            <h4 class="font-semibold">Clean Syntax</h4>
+                        </div>
+                        <p class="text-gray-600">
+                            Familiar function syntax with powerful prompt templates. Variables are automatically substituted and type-checked.
+                        </p>
+                    </div>
+
+                    <div class="bg-white rounded-lg p-6 border border-gray-200">
+                        <div class="flex items-center mb-4">
+                            <i data-lucide="play" class="w-6 h-6 text-black mr-3"></i>
+                            <h4 class="font-semibold">Runtime Integration</h4>
+                        </div>
+                        <p class="text-gray-600">
+                            Compiled functions expose clean C APIs. The runtime handles LLM connections and configuration automatically.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases Section -->
+    <section id="examples" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl lg:text-5xl font-bold mb-6">
+                    Versatile AI Application Development
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    From data analysis to content generation, VibeLang adapts to your AI development needs.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Use Case 1: Data Analysis -->
+                <div class="text-center group">
+                    <div
+                        class="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6 group-hover:bg-black group-hover:text-white transition-all duration-300">
+                        <i data-lucide="bar-chart" class="w-10 h-10"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Data Analysis</h3>
+                    <p class="text-gray-600">Type-safe analysis functions that understand data semantics and provide meaningful insights.</p>
+                </div>
+
+                <!-- Use Case 2: Content Generation -->
+                <div class="text-center group">
+                    <div
+                        class="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6 group-hover:bg-black group-hover:text-white transition-all duration-300">
+                        <i data-lucide="edit" class="w-10 h-10"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Content Generation</h3>
+                    <p class="text-gray-600">Generate structured content with semantic types for consistent, validated outputs.</p>
+                </div>
+
+                <!-- Use Case 3: Language Processing -->
+                <div class="text-center group">
+                    <div
+                        class="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6 group-hover:bg-black group-hover:text-white transition-all duration-300">
+                        <i data-lucide="message-circle" class="w-10 h-10"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">NLP Tasks</h3>
+                    <p class="text-gray-600">Sentiment analysis, classification, and extraction with type-safe semantic meaning.</p>
+                </div>
+
+                <!-- Use Case 4: API Integration -->
+                <div class="text-center group">
+                    <div
+                        class="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6 group-hover:bg-black group-hover:text-white transition-all duration-300">
+                        <i data-lucide="network" class="w-10 h-10"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">API Integration</h3>
+                    <p class="text-gray-600">Embed AI capabilities in existing systems through clean C APIs and Python wrappers.</p>
+                </div>
+            </div>
+
+            <!-- Example Projects -->
+            <div class="mt-16">
+                <h3 class="text-2xl font-semibold text-center mb-8">Example Applications</h3>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center mb-4">
+                            <i data-lucide="cloud-sun" class="w-6 h-6 mr-3"></i>
+                            <h4 class="font-semibold">Weather Assistant</h4>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">Type-safe weather queries with semantic temperature and forecast types</p>
+                        <a href="https://github.com/dowhiledev/vibelang/blob/main/examples/weather.vibe"
+                            class="text-black hover:underline text-sm font-medium">
+                            View Example <i data-lucide="external-link" class="w-3 h-3 inline ml-1"></i>
+                        </a>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center mb-4">
+                            <i data-lucide="smile" class="w-6 h-6 mr-3"></i>
+                            <h4 class="font-semibold">Joke Generator</h4>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">Generate structured humor with semantic meaning types for different joke styles</p>
+                        <a href="https://github.com/dowhiledev/vibelang/blob/main/examples/joke.vibe"
+                            class="text-black hover:underline text-sm font-medium">
+                            View Example <i data-lucide="external-link" class="w-3 h-3 inline ml-1"></i>
+                        </a>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center mb-4">
+                            <i data-lucide="message-square" class="w-6 h-6 mr-3"></i>
+                            <h4 class="font-semibold">Greeting Bot</h4>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">Personalized greetings with semantic meaning for tone and formality</p>
+                        <a href="https://github.com/dowhiledev/vibelang/blob/main/examples/greeting.vibe"
+                            class="text-black hover:underline text-sm font-medium">
+                            View Example <i data-lucide="external-link" class="w-3 h-3 inline ml-1"></i>
                         </a>
                     </div>
                 </div>
             </div>
-        </nav>
+        </div>
+    </section>
 
-        <!-- Hero Section -->
-        <section class="pt-32 pb-20">
-            <div class="container mx-auto px-6 text-center">
-                <div class="mb-8 relative">
-                    <h1 class="text-6xl md:text-8xl font-black font-mono mb-4 glitch neon-glow bg-gradient-to-r from-cyan-400 via-pink-500 to-cyan-400 bg-clip-text text-transparent relative" data-text="VibeLang">
-                        VibeLang
-                        <!-- Thug life glasses on the title -->
-                        <img src="thug-glass.png" alt="Thug Life Glasses" class="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-90" style="width: 120px; height: 80px; transform: translate(-50%, -50%) rotate(-2deg);">
-                    </h1>
-                    <div class="text-xl md:text-2xl text-cyan-300 typing font-mono max-w-2xl mx-auto">
-                        Natural Language Programming for the AI Era
-                    </div>
-                </div>
-                
-                <p class="text-lg md:text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-                    A statically-typed language designed for natural language interactions with LLM models. 
-                    Build AI features with ease.
+    <!-- Installation Guide Section -->
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl lg:text-5xl font-bold mb-6">
+                    Getting Started with VibeLang
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Install VibeLang and start building type-safe AI applications in minutes.
                 </p>
-                
-                <div class="flex flex-col md:flex-row items-center justify-center gap-6 mb-16">
-                    <button class="bg-gradient-to-r from-pink-500 to-cyan-500 px-8 py-4 rounded-lg text-lg font-semibold hover:shadow-xl hover:shadow-pink-500/25 transition-all transform hover:scale-105">
-                        <i data-lucide="play" class="inline w-5 h-5 mr-2"></i>
-                        Get Started
-                    </button>
-                    <button class="border-2 border-cyan-400 text-cyan-400 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-cyan-400 hover:text-black transition-all">
-                        <i data-lucide="book-open" class="inline w-5 h-5 mr-2"></i>
-                        Read Docs
-                    </button>
-                </div>
-
-                <!-- Code Example -->
-                <div class="max-w-4xl mx-auto code-block rounded-xl p-8 font-mono text-left">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="text-cyan-400 font-semibold">weather.vibe</div>
-                        <div class="flex space-x-2">
-                            <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-                            <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                        </div>
-                    </div>
-                    <pre class="text-sm md:text-base leading-relaxed"><code><span class="text-pink-400">type</span> <span class="text-cyan-300">Temperature</span> = <span class="text-yellow-400">Meaning</span>&lt;<span class="text-green-400">Int</span>&gt;(<span class="text-orange-400">"temperature in Celsius"</span>);
-<span class="text-pink-400">type</span> <span class="text-cyan-300">Forecast</span> = <span class="text-yellow-400">Meaning</span>&lt;<span class="text-green-400">String</span>&gt;(<span class="text-orange-400">"weather forecast description"</span>);
-
-<span class="text-pink-400">fn</span> <span class="text-cyan-300">getTemperature</span>(<span class="text-purple-300">city</span>: <span class="text-green-400">String</span>) -> <span class="text-cyan-300">Temperature</span> {
-    <span class="text-yellow-400">prompt</span> <span class="text-orange-400">"What is the current temperature in {city} in Celsius?"</span>;
-}
-
-<span class="text-pink-400">fn</span> <span class="text-cyan-300">getForecast</span>(<span class="text-purple-300">city</span>: <span class="text-green-400">String</span>, <span class="text-purple-300">day</span>: <span class="text-green-400">String</span>) -> <span class="text-cyan-300">Forecast</span> {
-    <span class="text-yellow-400">prompt</span> <span class="text-orange-400">"Provide a brief weather forecast for {city} on {day}."</span>;
-}</code></pre>
-                </div>
             </div>
-        </section>
 
-        <!-- Features Section -->
-        <section id="features" class="py-20 retro-grid">
-            <div class="container mx-auto px-6">
-                <h2 class="text-4xl md:text-6xl font-bold text-center mb-16 font-mono bg-gradient-to-r from-cyan-400 to-pink-500 bg-clip-text text-transparent">
-                    Features
-                </h2>
-                
-                <div class="grid md:grid-cols-3 gap-8">
-                    <div class="code-block rounded-xl p-8 float hover:shadow-xl hover:shadow-cyan-500/10 transition-all relative">
-                        <div class="text-cyan-400 mb-4 relative">
-                            <i data-lucide="brain" class="w-12 h-12"></i>
-                            <img src="thug-glass.png" alt="Thug Glasses" class="absolute top-2 -right-2 opacity-0.7" style="width: 20px; height: 8px;">
+            <div class="grid lg:grid-cols-2 gap-12 items-start">
+                <!-- Installation Steps -->
+                <div class="space-y-8">
+                    <div class="bg-white rounded-lg p-6 border border-gray-200">
+                        <div class="flex items-center mb-4">
+                            <div class="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">1</div>
+                            <h3 class="text-xl font-semibold">Prerequisites</h3>
                         </div>
-                        <h3 class="text-xl font-bold mb-4 text-cyan-300">AI-Powered</h3>
-                        <p class="text-gray-300">Direct integration with LLM providers for natural language programming.</p>
+                        <ul class="space-y-2 text-gray-600">
+                            <li>• C compiler (GCC or Clang)</li>
+                            <li>• CMake 3.10+</li>
+                            <li>• libcurl and cJSON development libraries</li>
+                            <li>• Bison and Flex</li>
+                        </ul>
                     </div>
+
+                    <div class="bg-white rounded-lg p-6 border border-gray-200">
+                        <div class="flex items-center mb-4">
+                            <div class="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">2</div>
+                            <h3 class="text-xl font-semibold">Install VibeLang</h3>
+                        </div>
+                        <div class="bg-gray-900 rounded-lg p-4 font-mono text-sm text-white mb-4">
+                            <div>git clone https://github.com/dowhiledev/vibelang.git</div>
+                            <div>cd vibelang</div>
+                            <div>mkdir build && cd build</div>
+                            <div>cmake ..</div>
+                            <div>make</div>
+                            <div>sudo make install</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg p-6 border border-gray-200">
+                        <div class="flex items-center mb-4">
+                            <div class="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">3</div>
+                            <h3 class="text-xl font-semibold">Configure LLM Provider</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Create a <code class="bg-gray-100 px-2 py-1 rounded">vibeconfig.json</code> file:</p>
+                        <div class="bg-gray-900 rounded-lg p-4 font-mono text-sm text-white">
+                            <div>{</div>
+                            <div class="ml-4">"global": {</div>
+                            <div class="ml-8">"provider": "OpenAI",</div>
+                            <div class="ml-8">"api_key": "YOUR_API_KEY",</div>
+                            <div class="ml-8">"default_params": {</div>
+                            <div class="ml-12">"model": "gpt-3.5-turbo"</div>
+                            <div class="ml-8">}</div>
+                            <div class="ml-4">}</div>
+                            <div>}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Start Example -->
+                <div class="bg-white rounded-lg p-8 shadow-lg">
+                    <h3 class="text-xl font-semibold mb-6">Write Your First VibeLang Program</h3>
                     
-                    <div class="code-block rounded-xl p-8 float hover:shadow-xl hover:shadow-pink-500/10 transition-all relative" style="animation-delay: 0.2s;">
-                        <div class="text-pink-400 mb-4 relative">
-                            <i data-lucide="shield-check" class="w-12 h-12"></i>
-                            <img src="thug-glass.png" alt="Thug Glasses" class="absolute top-2 -right-2 opacity-0.7" style="width: 20px; height: 8px;">
+                    <div class="bg-gray-900 rounded-lg p-6 font-mono text-sm text-white mb-6">
+                        <div class="space-y-1">
+                            <div><span class="text-gray-400">// weather.vibe</span></div>
+                            <div><span class="text-blue-400">type</span> <span class="text-yellow-400">Temperature</span> = <span class="text-green-400">Meaning</span>&lt;<span class="text-blue-400">Int</span>&gt;(<span class="text-red-400">"temperature in Celsius"</span>);</div>
+                            <div></div>
+                            <div><span class="text-blue-400">fn</span> <span class="text-yellow-400">getTemp</span>(city: <span class="text-blue-400">String</span>) -&gt; <span class="text-yellow-400">Temperature</span> {</div>
+                            <div class="ml-4"><span class="text-blue-400">prompt</span> <span class="text-red-400">"What is the temperature in {city}?"</span>;</div>
+                            <div>}</div>
                         </div>
-                        <h3 class="text-xl font-bold mb-4 text-pink-300">Type Safe</h3>
-                        <p class="text-gray-300">Statically typed with semantic meaning support for robust code.</p>
                     </div>
-                    
-                    <div class="code-block rounded-xl p-8 float hover:shadow-xl hover:shadow-cyan-500/10 transition-all relative" style="animation-delay: 0.4s;">
-                        <div class="text-cyan-400 mb-4 relative">
-                            <i data-lucide="code" class="w-12 h-12"></i>
-                            <img src="thug-glass.png" alt="Thug Glasses" class="absolute top-2 -right-2 opacity-0.7" style="width: 20px; height: 8px;">
+
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-2">Compile:</p>
+                            <div class="bg-gray-100 rounded p-3 font-mono text-sm">
+                                vibec weather.vibe
+                            </div>
                         </div>
-                        <h3 class="text-xl font-bold mb-4 text-cyan-300">Cross-Platform</h3>
-                        <p class="text-gray-300">C API with Python wrappers for seamless integration.</p>
+                        
+                        <div>
+                            <p class="text-sm text-gray-600 mb-2">Use in C:</p>
+                            <div class="bg-gray-100 rounded p-3 font-mono text-sm">
+                                gcc -o app app.c -lvibelang
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <div class="flex gap-4">
+                            <a href="https://dowhiledev.github.io/vibelang/" target="_blank" 
+                               class="flex-1 bg-black text-white text-center py-3 rounded-lg hover:bg-gray-800 transition-colors">
+                                <i data-lucide="book" class="w-4 h-4 inline mr-2"></i>
+                                Documentation
+                            </a>
+                            <a href="https://github.com/dowhiledev/vibelang/tree/main/examples" target="_blank"
+                               class="flex-1 border border-black text-center py-3 rounded-lg hover:bg-black hover:text-white transition-colors">
+                                <i data-lucide="code" class="w-4 h-4 inline mr-2"></i>
+                                Examples
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Status Section -->
-        <section class="py-20">
-            <div class="container mx-auto px-6">
-                <h2 class="text-4xl font-bold text-center mb-16 font-mono text-cyan-400">
-                    Development Status
+    <!-- Get Started Section -->
+    <section id="get-started" class="py-20 bg-black text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h2 class="text-4xl lg:text-5xl font-bold mb-6">
+                    Ready to Experience Type-Safe AI?
                 </h2>
-                
-                <div class="max-w-2xl mx-auto space-y-6">
-                    <div class="flex items-center space-x-4 code-block rounded-lg p-4">
-                        <div class="text-green-400">✅</div>
-                        <span class="flex-1">Core Compiler Development</span>
-                        <div class="text-green-400 font-mono">COMPLETE</div>
-                    </div>
-                    <div class="flex items-center space-x-4 code-block rounded-lg p-4">
-                        <div class="text-green-400">✅</div>
-                        <span class="flex-1">Code Generation & C API Exposure</span>
-                        <div class="text-green-400 font-mono">COMPLETE</div>
-                    </div>
-                    <div class="flex items-center space-x-4 code-block rounded-lg p-4">
-                        <div class="text-green-400">✅</div>
-                        <span class="flex-1">Runtime Library & LLM Integration</span>
-                        <div class="text-green-400 font-mono">COMPLETE</div>
-                    </div>
-                    <div class="flex items-center space-x-4 code-block rounded-lg p-4">
-                        <div class="text-yellow-400">🔄</div>
-                        <span class="flex-1">Cross-Language Support and Wrappers</span>
-                        <div class="text-yellow-400 font-mono">IN PROGRESS</div>
-                    </div>
-                    <div class="flex items-center space-x-4 code-block rounded-lg p-4">
-                        <div class="text-yellow-400">🔄</div>
-                        <span class="flex-1">Comprehensive Testing and Documentation</span>
-                        <div class="text-yellow-400 font-mono">IN PROGRESS</div>
-                    </div>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto mb-12">
+                    Join the growing community of developers building reliable AI applications with VibeLang's 
+                    statically-typed approach to LLM interactions.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-6 justify-center mb-16">
+                    <a href="https://github.com/dowhiledev/vibelang"
+                        class="bg-white text-black px-8 py-4 rounded-lg hover:bg-gray-100 transition-all transform hover:scale-105 text-center font-medium">
+                        <i data-lucide="star" class="w-5 h-5 inline mr-2"></i>
+                        Star on GitHub
+                    </a>
+                    <a href="https://dowhiledev.github.io/vibelang/"
+                        class="border-2 border-white text-white px-8 py-4 rounded-lg hover:bg-white hover:text-black transition-all text-center font-medium">
+                        <i data-lucide="book" class="w-5 h-5 inline mr-2"></i>
+                        Read Documentation
+                    </a>
+                    <a href="https://github.com/dowhiledev/vibelang/discussions"
+                        class="border-2 border-white text-white px-8 py-4 rounded-lg hover:bg-white hover:text-black transition-all text-center font-medium">
+                        <i data-lucide="message-circle" class="w-5 h-5 inline mr-2"></i>
+                        Join Discussions
+                    </a>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Footer -->
-        <footer class="py-12 border-t border-cyan-500 border-opacity-30">
-            <div class="container mx-auto px-6 text-center">
-                <div class="text-cyan-400 font-mono text-lg mb-4">
-                    Made with ❤️ for the AI Era
+    <!-- Footer -->
+    <footer class="bg-gray-50 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-2">
+                        <img src="icon-dark.svg" alt="VibeLang" class="w-8 h-8">
+                        <div class="text-2xl font-bold">VibeLang</div>
+                    </div>
+                    <p class="text-gray-600">
+                        A statically-typed language for building reliable AI interactions with semantic meaning preservation.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="https://github.com/dowhiledev/vibelang" class="text-gray-600 hover:text-black">
+                            <i data-lucide="github" class="w-6 h-6"></i>
+                        </a>
+                        <a href="https://twitter.com/dowhiledev" class="text-gray-600 hover:text-black">
+                            <i data-lucide="twitter" class="w-6 h-6"></i>
+                        </a>
+                        <a href="https://github.com/dowhiledev/vibelang/discussions" class="text-gray-600 hover:text-black">
+                            <i data-lucide="message-circle" class="w-6 h-6"></i>
+                        </a>
+                    </div>
                 </div>
-                <div class="text-gray-400">
-                    © 2025 VibeLang. Licensed under MIT.
+
+                <div>
+                    <h4 class="font-semibold mb-4">Language</h4>
+                    <ul class="space-y-2 text-gray-600">
+                        <li><a href="#features" class="hover:text-black">Features</a></li>
+                        <li><a href="#examples" class="hover:text-black">Examples</a></li>
+                        <li><a href="#ecosystem" class="hover:text-black">Installation</a></li>
+                        <li><a href="https://github.com/dowhiledev/vibelang/releases"
+                                class="hover:text-black">Releases</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-semibold mb-4">Resources</h4>
+                    <ul class="space-y-2 text-gray-600">
+                        <li><a href="https://dowhiledev.github.io/vibelang/"
+                                class="hover:text-black">Documentation</a></li>
+                        <li><a href="https://github.com/dowhiledev/vibelang/tree/main/examples"
+                                class="hover:text-black">Examples</a></li>
+                        <li><a href="https://github.com/dowhiledev/vibelang/issues" class="hover:text-black">Issues</a>
+                        </li>
+                        <li><a href="https://github.com/dowhiledev/vibelang/discussions"
+                                class="hover:text-black">Discussions</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-semibold mb-4">Community</h4>
+                    <ul class="space-y-2 text-gray-600">
+                        <li><a href="https://github.com/dowhiledev/vibelang/discussions" class="hover:text-black">Discussions</a></li>
+                        <li><a href="https://github.com/dowhiledev/vibelang/blob/main/CONTRIBUTING.md"
+                                class="hover:text-black">Contributing</a></li>
+                        <li><a href="https://github.com/dowhiledev/vibelang/blob/main/CODE_OF_CONDUCT.md"
+                                class="hover:text-black">Code of Conduct</a></li>
+                        <li><a href="https://github.com/dowhiledev/vibelang/blob/main/LICENSE"
+                                class="hover:text-black">License</a></li>
+                    </ul>
                 </div>
             </div>
-        </footer>
-    </div>
 
-    <!-- JavaScript for the retro background -->
-    <script type="module">
-        import { Scene, PerspectiveCamera, Color, Object3D, PlaneGeometry, BufferGeometry, BufferAttribute, Vector2, Vector3, MathUtils } from 'https://unpkg.com/three@0.150.0/build/three.module.js';
-        import { SimplexNoise } from 'https://unpkg.com/three@0.150.0/examples/jsm/math/SimplexNoise.js';
+            <div class="border-t border-gray-200 mt-12 pt-8 text-center text-gray-600">
+                <p>&copy; 2025 VibeLang. Released under the MIT License.</p>
+            </div>
+        </div>
+    </footer>
 
-        let noise = new SimplexNoise();
+    <!-- Scroll to Top Button -->
+    <button id="scrollToTop"
+        class="fixed bottom-8 right-8 bg-black text-white p-3 rounded-lg shadow-lg hover:bg-gray-800 transition-all transform hover:scale-110 opacity-0 invisible">
+        <i data-lucide="arrow-up" class="w-6 h-6"></i>
+    </button>
 
-        class WireRenderer {
-            constructor(cnv) {
-                this.domElement = cnv;
-                this.context = cnv.getContext("2d");
-                this.clearColor = "black";
-                this.halfSize = new Vector3();
-                this.context.lineCap = "round";
-            }
-            
-            setBackgroundGradient(colorStops) {
-                this.clearColor = this.context.createLinearGradient(0, 0, 0, this.domElement.height);
-                colorStops.forEach(cs => {
-                    this.clearColor.addColorStop(cs.offset, cs.color);
-                })
-            }
-            
-            setSize(width, height) {
-                this.domElement.width = width;
-                this.domElement.height = height;
-                this.halfSize.set(width * 0.5, height * 0.5);
-            }
-            
-            render(scene, camera) {
-                scene.updateMatrixWorld();
-                camera.updateMatrixWorld();
-                
-                let ctx = this.context;
-                ctx.lineCap = "round";
-                ctx.fillStyle = this.clearColor;
-                ctx.fillRect(0, 0, this.domElement.width, this.domElement.height);
-                
-                scene.traverse(object => {
-                    if (object.isLines) {
-                        let g = object.geometry;
-                        let m = object.material;
-                        let index = g.index;
-                        ctx.lineWidth = m.lineWidth;
-                        ctx.strokeStyle = m.color;
-                        ctx.beginPath();
-                        for (let i = 0; i < index.count * 0.5; i++) {
-                            object.linePoints.forEach((lp, idx) => {
-                                lp.fromBufferAttribute(g.attributes.position, index.getX(i * 2 + idx));
-                                object.localToWorld(lp);
-                                lp.project(camera);
-                                lp.y *= -1;
-                                lp.multiply(this.halfSize).add(this.halfSize);
-                            })
-                            ctx.moveTo(object.linePoints[0].x, object.linePoints[0].y);
-                            ctx.lineTo(object.linePoints[1].x, object.linePoints[1].y);
-                        }
-                        ctx.stroke();
-                    }
-                })
-            }
-        }
+    <script>
+        // Three.js SpriteCanvasMaterial Implementation
+        THREE.SpriteCanvasMaterial = function (parameters) {
+            THREE.Material.call(this);
+            this.type = 'SpriteCanvasMaterial';
+            this.color = new THREE.Color(0xffffff);
+            this.program = function () { };
+            this.setValues(parameters);
+        };
 
-        class Lines extends Object3D {
-            constructor(geometry, material) {
-                super();
-                this.geometry = geometry;
-                this.material = material;
-                this.isLines = true;
-                this.linePoints = [new Vector3(), new Vector3()];
-            }
-        }
+        THREE.SpriteCanvasMaterial.prototype = Object.create(THREE.Material.prototype);
+        THREE.SpriteCanvasMaterial.prototype.constructor = THREE.SpriteCanvasMaterial;
+        THREE.SpriteCanvasMaterial.prototype.isSpriteCanvasMaterial = true;
 
-        function ToQuads(g) {
-            let p = g.parameters;
-            let segmentsX = p.widthSegments || 1;
-            let segmentsY = p.heightSegments || 1;
-            let indices = [];
-            for (let i = 0; i < segmentsY + 1; i++) {
-                let index11 = 0;
-                let index12 = 0;
-                for (let j = 0; j < segmentsX; j++) {
-                    index11 = (segmentsX + 1) * i + j;
-                    index12 = index11 + 1;
-                    let index21 = index11;
-                    let index22 = index11 + (segmentsX + 1);
-                    indices.push(index11, index12);
-                    if (index22 < ((segmentsX + 1) * (segmentsY + 1) - 1)) {
-                        indices.push(index21, index22);
-                    }
+        THREE.SpriteCanvasMaterial.prototype.clone = function () {
+            var material = new THREE.SpriteCanvasMaterial();
+            material.copy(this);
+            material.color.copy(this.color);
+            material.program = this.program;
+            return material;
+        };
+
+        // Particle Wave Variables - exactly matching the example
+        var SEPARATION = 200, AMOUNTX = 40, AMOUNTY = 60;
+        var camera, scene, renderer;
+        var particles = [];
+        var count = 0;
+        var windowHalfX, windowHalfY;
+
+        function initParticleWave() {
+            const canvas = document.getElementById('particle-canvas');
+            const heroSection = document.querySelector('.hero-gradient');
+
+            if (!canvas || !heroSection) return;
+
+            // Get hero section dimensions
+            const rect = heroSection.getBoundingClientRect();
+            windowHalfX = rect.width / 2;
+            windowHalfY = rect.height / 2;
+
+            // Setup camera for side profile view
+            camera = new THREE.PerspectiveCamera(75, rect.width / rect.height, 1, 10000);
+            camera.position.set(0, 0, 1000);
+
+            // Setup scene with fog
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0xffffff, 1000, 4000);
+
+            // Create particle material with black color for better contrast
+            var PI2 = Math.PI * 2;
+            var material = new THREE.SpriteCanvasMaterial({
+                color: 0x000000, // Black particles for contrast
+                program: function (context) {
+                    context.globalAlpha = 0.2; // More transparent particles
+                    context.beginPath();
+                    context.arc(0, 0, 0.2, 0, PI2, true); // Reduced particle size
+                    context.fill();
                 }
-                if ((index12 + segmentsX + 1) <= ((segmentsX + 1) * (segmentsY + 1) - 1)) {
-                    indices.push(index12, index12 + segmentsX + 1);
+            });
+
+            // Create particles grid spread across the width and depth
+            var i = 0;
+            for (var ix = 0; ix < AMOUNTX; ix++) {
+                for (var iy = 0; iy < AMOUNTY; iy++) {
+                    var particle = particles[i++] = new THREE.Sprite(material);
+                    particle.position.x = ix * SEPARATION - ((AMOUNTX * SEPARATION) / 2);
+                    particle.position.z = iy * SEPARATION - ((AMOUNTY * SEPARATION) / 2);
+                    particle.position.y = -800; // Start even further down at bottom
+                    scene.add(particle);
                 }
             }
-            g.setIndex(indices);
+
+            // Setup renderer with CanvasRenderer
+            renderer = new THREE.CanvasRenderer({
+                canvas: canvas,
+                alpha: true
+            });
+
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(rect.width, rect.height);
+            renderer.setClearColor(scene.fog.color);
+
+            // Handle resize
+            window.addEventListener('resize', onWindowResize, false);
+
+            // Start animation
+            animate();
         }
 
-        // Setup scene
-        let cnv = document.getElementById('background-canvas');
-        let scene = new Scene();
-        let camera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.set(0, 0.25, 10.25);
-        let renderer = new WireRenderer(cnv);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        
-        // Cyberpunk color scheme
-        let backGrd = [
-            { offset: 0, color: "#ff0080" }, 
-            { offset: 0.5, color: "#8000ff" }, 
-            { offset: 1, color: "#000020" }
-        ];
-        renderer.setBackgroundGradient(backGrd);
+        function onWindowResize() {
+            const heroSection = document.querySelector('.hero-gradient');
+            if (!heroSection) return;
 
-        // Grid
-        let g = new PlaneGeometry(20, 22, 15, 11).translate(0, 1, 0).rotateX(-Math.PI * 0.5);
-        ToQuads(g);
+            const rect = heroSection.getBoundingClientRect();
+            windowHalfX = rect.width / 2;
+            windowHalfY = rect.height / 2;
 
-        let pos = g.attributes.position;
-        let isMoving = [];
-        for (let i = 0; i < pos.count; i++) {
-            let z = pos.getZ(i);
-            let moving = 1;
-            if (z > 9 || z < -10) {
-                moving = 0;
-            }
-            if (z < -10) {
-                z -= 2 * Math.sign(z);
-            }
-            isMoving.push(moving);
-            pos.setZ(i, z);
-        }
-        g.setAttribute("isMoving", new BufferAttribute(new Float32Array(isMoving), 1));
-        g.setAttribute("posInit", g.attributes.position.clone());
-
-        let m = {
-            lineWidth: 2,
-            color: "#00ffff",
-        }
-        let grid = new Lines(g, m);
-        scene.add(grid);
-
-        // Animation variables
-        let posInit = g.attributes.posInit;
-        let moves = g.attributes.isMoving;
-        let uvs = g.attributes.uv;
-        let uv = new Vector2();
-        let speed = 0.5;
-
-        function waveGridByTime(time) {
-            for (let i = 0; i < g.attributes.position.count; i++) {
-                uv.fromBufferAttribute(uvs, i);
-                let maxHeight = 2;
-                let valley = MathUtils.smoothstep(Math.abs(uv.x - 0.5), 0.05, 0.25) * maxHeight;
-
-                let currZ = posInit.getZ(i);
-                let currX = posInit.getX(i);
-                let currScale = 1 / 10 * 2;
-                if (moves.getX(i) == 0) {
-                    let n1 = Math.floor((time * speed / 2)) * 2;
-                    let nz1 = noise.noise(currX * currScale, (currZ - n1) * currScale) * 0.5 + 0.5;
-                    let n2 = (Math.floor((time * speed / 2)) + 1) * 2;
-                    let nz2 = noise.noise(currX * currScale, (currZ - n2) * currScale) * 0.5 + 0.5;
-                    let noize = (nz2 - nz1) * (((time * speed) % 2) / 2) + nz1;
-                    pos.setY(i, noize * valley);
-                } else {
-                    let zGap = (time * speed) % 2;
-                    let noize = noise.noise(currX * currScale, (currZ - Math.floor((time * speed / 2)) * 2) * currScale) * 0.5 + 0.5;
-                    pos.setY(i, noize * valley);
-                    pos.setZ(i, currZ + zGap);
-                }
-            }
-        }
-
-        // Resize handler
-        window.addEventListener("resize", event => {
-            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.aspect = rect.width / rect.height;
             camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setBackgroundGradient(backGrd);
+
+            renderer.setSize(rect.width, rect.height);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            render();
+        }
+
+        function render() {
+            // Side profile camera position - looking at the wave from the side
+            camera.position.set(0, 0, 1000);
+            camera.lookAt(0, -200, 0); // Look down towards the bottom of the screen
+
+            var i = 0;
+
+            for (var ix = 0; ix < AMOUNTX; ix++) {
+                for (var iy = 0; iy < AMOUNTY; iy++) {
+                    var particle = particles[i++];
+
+                    // Position particles at the bottom and create wave motion
+                    particle.position.y = -600 + (Math.sin((ix + count) * 0.3) * 50) +
+                        (Math.sin((iy + count) * 0.5) * 50);
+
+                    // Scale particles
+                    particle.scale.x = particle.scale.y = (Math.sin((ix + count) * 0.3) + 1) * 2 +
+                        (Math.sin((iy + count) * 0.5) + 1) * 2;
+                }
+            }
+
+            renderer.render(scene, camera);
+            count += 0.1; // Animation speed matching example
+        }
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Copy to clipboard functionality
+        function copyCommand(command, element) {
+            navigator.clipboard.writeText(command).then(function() {
+                // Change icon to check temporarily
+                const icon = element.querySelector('i[data-lucide="copy"]');
+                icon.setAttribute('data-lucide', 'check');
+                lucide.createIcons();
+
+                // Show feedback
+                const feedback = document.getElementById('copyFeedback');
+                feedback.style.opacity = '1';
+
+                // Reset after 2 seconds
+                setTimeout(function() {
+                    icon.setAttribute('data-lucide', 'copy');
+                    lucide.createIcons();
+                    feedback.style.opacity = '0';
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        // Initialize particle wave when page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            // Small delay to ensure canvas and hero section are ready
+            setTimeout(initParticleWave, 100);
         });
 
-        // Animation loop
-        let timeStart = performance.now();
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
 
-        function draw() {
-            let t = (performance.now() - timeStart) * 0.001;
-            waveGridByTime(t * 2);
-            renderer.render(scene, camera);
-            requestAnimationFrame(draw);
+        // Scroll to top button
+        const scrollToTopBtn = document.getElementById('scrollToTop');
+
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                scrollToTopBtn.classList.remove('opacity-0', 'invisible');
+                scrollToTopBtn.classList.add('opacity-100', 'visible');
+            } else {
+                scrollToTopBtn.classList.add('opacity-0', 'invisible');
+                scrollToTopBtn.classList.remove('opacity-100', 'visible');
+            }
+        });
+
+        scrollToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Mobile menu toggle (if needed)
+        const mobileMenuBtn = document.querySelector('[data-mobile-menu-toggle]');
+        const mobileMenu = document.querySelector('[data-mobile-menu]');
+
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
         }
 
-        draw();
-    </script>
+        // Thug Glasses Random Animation
+        function createThugGlasses() {
+            const glasses = document.createElement('img');
+            glasses.src = 'thug-glass.png';
+            glasses.className = 'thug-glasses';
+            glasses.alt = 'Thug Glasses';
+            
+            // Random position
+            const x = Math.random() * (window.innerWidth - 80);
+            const y = Math.random() * (window.innerHeight - 80);
+            
+            glasses.style.left = x + 'px';
+            glasses.style.top = y + 'px';
+            
+            document.body.appendChild(glasses);
+            
+            // Show glasses with animation
+            setTimeout(() => {
+                glasses.classList.add('show');
+            }, 100);
+            
+            // Add wiggle animation
+            setTimeout(() => {
+                glasses.classList.add('wiggle');
+            }, 600);
+            
+            // Start fade out
+            setTimeout(() => {
+                glasses.classList.add('fade-out');
+            }, 2500);
+            
+            // Remove from DOM
+            setTimeout(() => {
+                if (glasses.parentNode) {
+                    glasses.parentNode.removeChild(glasses);
+                }
+            }, 3000);
+        }
 
-    <!-- Initialize Lucide Icons -->
-    <script>
-        lucide.createIcons();
+        // Start thug glasses animations randomly
+        function startThugGlassesAnimation() {
+            // Create glasses at random intervals (every 2-6 seconds)
+            function scheduleNextGlasses() {
+                const randomDelay = Math.random() * 4000 + 2000; // 2-6 seconds
+                setTimeout(() => {
+                    createThugGlasses();
+                    scheduleNextGlasses();
+                }, randomDelay);
+            }
+            
+            // Start the cycle
+            scheduleNextGlasses();
+            
+            // Also create one immediately after a short delay
+            setTimeout(createThugGlasses, 2000);
+        }
+
+        // Initialize thug glasses animation when page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(startThugGlassesAnimation, 3000); // Start after 3 seconds
+        });
     </script>
 </body>
+
 </html>
