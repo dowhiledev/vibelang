@@ -115,13 +115,44 @@ fn getForecast(city: String, day: String) -> Forecast {
 }
 ```
 
-Compile and use it:
+Compile it and integrate the generated C file into your own program:
 
 ```bash
 vibec weather.vibe
-gcc -o weather_app weather_app.c -lvibelang
-./weather_app
+# weather.c contains the generated functions
+# compile it together with your application code
+gcc -o weather_app my_app.c weather.c -lvibelang
+# vibec also produces weather.so for dynamic loading
 ```
+
+The runtime automatically initializes itself the first time a generated
+function executes. You can still call `vibe_runtime_init()` manually to check
+for errors or override configuration, but it's optional for simple programs:
+
+```c
+#include <runtime.h>
+
+int main() {
+    // Manual initialization is optional
+    vibe_runtime_init();
+
+    /* call generated functions here */
+
+    // The runtime is automatically shut down at program exit
+    return 0;
+}
+```
+
+The system needs to locate `libvibelang` at runtime. Either install it in a
+standard library path, set the environment variable `LD_LIBRARY_PATH` (or
+`DYLD_LIBRARY_PATH` on macOS) to include the installation directory, or compile
+with an rpath:
+
+```bash
+gcc -o weather_app my_app.c weather.c -lvibelang \
+    -Wl,-rpath,/usr/local/lib
+```
+Replace `/usr/local/lib` with the prefix used during installation.
 
 ## Known Issues
 

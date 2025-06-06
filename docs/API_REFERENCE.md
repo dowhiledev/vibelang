@@ -6,10 +6,11 @@ This document provides a comprehensive reference for the VibeLang C API, which a
 
 ```c
 #include <vibelang.h>
+#include <runtime.h>
 
 int main() {
-    // Initialize VibeLang runtime
-    vibelang_init();
+    // Initialize the runtime
+    vibe_runtime_init();
     
     // Load a module
     VibeModule* module = vibelang_load("mymodule.vibe");
@@ -25,7 +26,7 @@ int main() {
     // Clean up
     vibe_value_free(result);
     vibelang_unload(module);
-    vibelang_shutdown();
+    vibe_runtime_shutdown();
     
     return 0;
 }
@@ -33,15 +34,19 @@ int main() {
 
 ## Initialization and Cleanup
 
-### `VibeError vibelang_init(void)`
+### `VibeError vibe_runtime_init(void)`
 
-Initializes the VibeLang runtime. This must be called before using any other VibeLang functions.
+Initializes the runtime and opens the LLM connection. It is automatically
+called the first time a generated function executes, but you may invoke it
+manually to check for errors or customize configuration.
 
 **Returns:** `VIBE_SUCCESS` on success, or an error code on failure.
 
-### `void vibelang_shutdown(void)`
+### `void vibe_runtime_shutdown(void)`
 
-Shuts down the VibeLang runtime and frees all associated resources.
+Shuts down the runtime and frees all associated resources. This function is
+registered with `atexit`, so calling it is optional unless you want to shut the
+runtime down early.
 
 ## Module Management
 
@@ -150,7 +155,7 @@ Gets a boolean value.
 
 **Returns:** The boolean value, or 0 if not a boolean.
 
-### `long long vibe_value_get_int(const VibeValue* value)`
+### `int vibe_value_get_int(const VibeValue* value)`
 
 Gets an integer value. Will convert from other numeric types if possible.
 
@@ -227,10 +232,10 @@ For advanced use cases, you can directly execute prompts without going through a
 
 ```c
 #include <vibelang.h>
-#include <vibelang/runtime.h>
+#include <runtime.h>
 
 int main() {
-    vibelang_init();
+    vibe_runtime_init();
     
     // Execute a prompt directly
     VibeValue* result = vibe_execute_prompt("What is the capital of France?");
@@ -238,7 +243,7 @@ int main() {
     printf("Answer: %s\n", vibe_value_get_string(result));
     
     vibe_value_free(result);
-    vibelang_shutdown();
+    vibe_runtime_shutdown();
     
     return 0;
 }

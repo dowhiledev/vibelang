@@ -195,7 +195,14 @@ static int generate_headers(FILE *file) {
   fprintf(file, "#include <stdio.h>\n");
   fprintf(file, "#include <stdlib.h>\n");
   fprintf(file, "#include <string.h>\n");
+  fprintf(file, "#include \"runtime.h\"\n");
   fprintf(file, "#include \"vibelang.h\"\n\n");
+
+  fprintf(file, "// Forward declarations for runtime functions\n");
+  fprintf(file,
+          "extern VibeValue vibe_execute_prompt(const char *prompt, const char *meaning);\n");
+  fprintf(file, "extern char *format_prompt(const char *template, char **var_names,\n");
+  fprintf(file, "                           char **var_values, int var_count);\n\n");
 
   return 1;
 }
@@ -311,6 +318,9 @@ static int generate_function(ast_node_t *func, FILE *file) {
           c_param_type = "const char*";
         } else if (strcmp(param_type, "Bool") == 0) {
           c_param_type = "int";
+        } else {
+          // Use custom type name directly
+          c_param_type = param_type;
         }
 
         fprintf(file, "%s %s", c_param_type, param_name);
@@ -768,11 +778,11 @@ static int generate_prompt_block(ast_node_t *prompt, FILE *file, int indent) {
   add_indent(file, indent + 1);
   if (meaning_value) {
     fprintf(file,
-            "VibeValue* prompt_result = vibe_execute_prompt(formatted_prompt, \"%s\");\n",
+            "VibeValue prompt_result = vibe_execute_prompt(formatted_prompt, \"%s\");\n",
             meaning_value);
   } else {
     fprintf(file,
-            "VibeValue* prompt_result = vibe_execute_prompt(formatted_prompt, NULL);\n");
+            "VibeValue prompt_result = vibe_execute_prompt(formatted_prompt, NULL);\n");
   }
   add_indent(file, indent + 1);
   fprintf(file, "\n");
@@ -800,15 +810,14 @@ static int generate_prompt_block(ast_node_t *prompt, FILE *file, int indent) {
 
   // Convert the result to the appropriate return type
   if (strcmp(return_type, "int") == 0) {
-    fprintf(file, "return vibe_value_get_int(prompt_result);\n");
+    fprintf(file, "return vibe_value_get_int(&prompt_result);\n");
   } else if (strcmp(return_type, "double") == 0) {
-    fprintf(file, "return vibe_value_get_float(prompt_result);\n");
-  } else if (strcmp(return_type, "int") == 0 &&
-             strstr(return_type, "Bool") != NULL) {
-    fprintf(file, "return vibe_value_get_bool(prompt_result);\n");
+    fprintf(file, "return vibe_get_number(&prompt_result);\n");
+  } else if (strcmp(return_type, "Bool") == 0) {
+    fprintf(file, "return vibe_get_bool(&prompt_result);\n");
   } else {
     // Default to string
-    fprintf(file, "return vibe_value_get_string(prompt_result);\n");
+    fprintf(file, "return (char*)vibe_get_string(&prompt_result);\n");
   }
 
   add_indent(file, indent);

@@ -11,6 +11,15 @@
 #include "config.h"        // Added missing header
 #include "llm_interface.h" // Added missing header
 
+// Track whether the runtime has been initialized
+static int runtime_initialized = 0;
+
+static void auto_shutdown(void) {
+  if (runtime_initialized) {
+    vibe_runtime_shutdown();
+  }
+}
+
 // Internal runtime structures that extend the public ones
 typedef struct {
   VibeModule base; // Include the public struct members
@@ -27,6 +36,9 @@ typedef enum {
 
 // Function to initialize the LLM runtime
 VibeError vibe_runtime_init() {
+  if (runtime_initialized)
+    return VIBE_SUCCESS;
+
   INFO("Initializing Vibe language runtime");
 
   // Load configuration
@@ -49,11 +61,16 @@ VibeError vibe_runtime_init() {
   }
 
   INFO("Vibe language runtime initialized successfully");
+  runtime_initialized = 1;
+  atexit(auto_shutdown);
   return VIBE_SUCCESS;
 }
 
 // Function to shut down the runtime
 void vibe_runtime_shutdown() {
+  if (!runtime_initialized)
+    return;
+
   INFO("Shutting down Vibe language runtime");
 
   // Close LLM connection
@@ -62,6 +79,7 @@ void vibe_runtime_shutdown() {
   // Cleanup resources
   free_config();
 
+  runtime_initialized = 0;
   INFO("Vibe language runtime shut down successfully");
 }
 
@@ -71,6 +89,13 @@ VibeValue vibe_execute_prompt(const char *prompt, const char *meaning) {
 
   // Initialize result as NULL in case of failure
   result.type = VIBE_NULL;
+
+  if (!runtime_initialized) {
+    if (vibe_runtime_init() != VIBE_SUCCESS) {
+      ERROR("Runtime initialization failed");
+      return result;
+    }
+  }
 
   if (!prompt) {
     ERROR("Invalid prompt parameter");

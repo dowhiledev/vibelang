@@ -157,7 +157,7 @@ The runtime provides functions to create, access, and free these values:
 
 ```c
 VibeValue* vibe_value_int(long long value);
-long long vibe_value_get_int(const VibeValue* value);
+int vibe_value_get_int(const VibeValue* value);
 void vibe_value_free(VibeValue* value);
 ```
 

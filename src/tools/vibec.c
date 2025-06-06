@@ -270,6 +270,37 @@ int main(int argc, char *argv[]) {
 
   INFO("Compilation successful, output written to %s", output_file);
 
+  // Also build a shared library for runtime loading
+  size_t out_len = strlen(output_file);
+  char *lib_file = malloc(out_len + 4); // room for replacing .c with .so
+  if (!lib_file) {
+    ERROR("Memory allocation failed");
+    vibelang_shutdown();
+    free(source);
+    free(output_file);
+    return 1;
+  }
+  strcpy(lib_file, output_file);
+  if (out_len > 2 && strcmp(&output_file[out_len - 2], ".c") == 0) {
+    lib_file[out_len - 2] = '\0';
+  }
+  strcat(lib_file, ".so");
+
+  char cmd[512];
+  snprintf(cmd, sizeof(cmd),
+           "gcc -shared -fPIC %s -o %s -lvibelang",
+           output_file, lib_file);
+  INFO("Building shared library %s", lib_file);
+  if (options.verbose) {
+    INFO("Running: %s", cmd);
+  }
+  if (system(cmd) != 0) {
+    WARNING("Failed to build shared library with gcc");
+  } else {
+    INFO("Shared library created at %s", lib_file);
+  }
+  free(lib_file);
+
   // Cleanup
   vibelang_shutdown();
   free(source);
