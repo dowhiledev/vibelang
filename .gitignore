@@ -89,3 +89,8 @@ vibeconfig.local.json
 # Generated documentation
 /docs/html/
 /docs/latex/
+
+# Poetry virtual environment and build artifacts
+/python/.venv/
+/python/dist/
+/python/*.egg-info/

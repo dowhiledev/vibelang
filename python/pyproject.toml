@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "vibelang"
+version = "0.1.0"
+description = "Python helpers for compiling and loading VibeLang modules"
+authors = ["VibeLang Contributors"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "vibelang" }]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
