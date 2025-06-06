@@ -13,14 +13,17 @@ extern "C" {
 #endif
 
 /**
- * Initialize the Vibe language runtime
+ * Initialize the Vibe language runtime. This is called automatically the first
+ * time a generated function executes, but may be invoked explicitly to check
+ * for errors or override configuration.
  *
  * @return VIBE_SUCCESS on success, error code on failure
  */
 VibeError vibe_runtime_init(void);
 
 /**
- * Shutdown the Vibe language runtime
+ * Shutdown the Vibe language runtime. It will also be called automatically at
+ * program exit.
  */
 void vibe_runtime_shutdown(void);
 

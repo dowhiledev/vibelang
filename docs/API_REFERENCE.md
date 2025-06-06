@@ -36,13 +36,17 @@ int main() {
 
 ### `VibeError vibe_runtime_init(void)`
 
-Initializes the runtime and opens the LLM connection. Call this before invoking any generated functions.
+Initializes the runtime and opens the LLM connection. It is automatically
+called the first time a generated function executes, but you may invoke it
+manually to check for errors or customize configuration.
 
 **Returns:** `VIBE_SUCCESS` on success, or an error code on failure.
 
 ### `void vibe_runtime_shutdown(void)`
 
-Shuts down the runtime and frees all associated resources.
+Shuts down the runtime and frees all associated resources. This function is
+registered with `atexit`, so calling it is optional unless you want to shut the
+runtime down early.
 
 ## Module Management
 

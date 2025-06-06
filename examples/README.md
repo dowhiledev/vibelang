@@ -14,6 +14,7 @@ This directory contains sample `.vibe` programs that can be compiled with `vibec
    ```bash
 vibec joke.vibe
 # joke.c contains the generated function
+# vibec also builds joke.so for dynamic loading
 gcc -o joke_app joke_app.c joke.c -lvibelang
 # vibec also produces joke.so for dynamic loading
 ./joke_app <topic>
@@ -27,13 +28,10 @@ extern char* tellJoke(const char* topic);
 
 int main(int argc, char **argv) {
     if (argc != 2) return 1;
-    if (vibe_runtime_init() != VIBE_SUCCESS) {
-        fprintf(stderr, "runtime init failed\n");
-        return 1;
-    }
+    // Manual initialization is optional; the runtime will auto-start on first use
+    vibe_runtime_init();
     char *joke = tellJoke(argv[1]);
     printf("%s\n", joke);
-    vibe_runtime_shutdown();
     return 0;
 }
 ```

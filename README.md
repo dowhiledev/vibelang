@@ -125,20 +125,20 @@ gcc -o weather_app my_app.c weather.c -lvibelang
 # vibec also produces weather.so for dynamic loading
 ```
 
-Before calling any generated functions, initialize the runtime:
+The runtime automatically initializes itself the first time a generated
+function executes. You can still call `vibe_runtime_init()` manually to check
+for errors or override configuration, but it's optional for simple programs:
 
 ```c
 #include <runtime.h>
 
 int main() {
-    if (vibe_runtime_init() != VIBE_SUCCESS) {
-        fprintf(stderr, "Failed to start runtime\n");
-        return 1;
-    }
+    // Manual initialization is optional
+    vibe_runtime_init();
 
     /* call generated functions here */
 
-    vibe_runtime_shutdown();
+    // The runtime is automatically shut down at program exit
     return 0;
 }
 ```
