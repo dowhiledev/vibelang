@@ -286,10 +286,22 @@ int main(int argc, char *argv[]) {
   }
   strcat(lib_file, ".so");
 
+  const char *prefix = getenv("PREFIX");
+  if (!prefix) {
+    prefix = "/usr/local";
+  }
+
+  char rpath[256];
+#ifdef __APPLE__
+  snprintf(rpath, sizeof(rpath), "-Wl,-rpath,@loader_path");
+#else
+  snprintf(rpath, sizeof(rpath), "-Wl,-rpath,%s/lib", prefix);
+#endif
+
   char cmd[512];
   snprintf(cmd, sizeof(cmd),
-           "gcc -shared -fPIC %s -o %s -lvibelang",
-           output_file, lib_file);
+           "gcc -shared -fPIC %s -o %s -lvibelang %s",
+           output_file, lib_file, rpath);
   INFO("Building shared library %s", lib_file);
   if (options.verbose) {
     INFO("Running: %s", cmd);
