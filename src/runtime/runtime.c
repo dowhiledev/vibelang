@@ -159,9 +159,55 @@ VibeModule *vibe_load_module(const char *module_name) {
       get_file_mtime(module_path) > get_file_mtime(so_path)) {
     INFO("Compiling module: %s", module_name);
 
-    // TODO: Implement the actual compilation
-    // For now, just pretend we compiled it
-    sleep(1);
+    // Read the source file
+    char *source = read_file(module_path);
+    if (!source) {
+      ERROR("Failed to read module source: %s", module_path);
+      return NULL;
+    }
+
+    // Compile the source to a C file
+    char c_path[512];
+    snprintf(c_path, sizeof(c_path), "%s.c", module_name);
+
+    if (vibelang_init() != VIBE_SUCCESS) {
+      ERROR("Failed to initialize VibeLanguage compiler");
+      free(source);
+      return NULL;
+    }
+
+    if (vibelang_compile(source, c_path) != 0) {
+      ERROR("Compilation failed for %s", module_name);
+      free(source);
+      vibelang_shutdown();
+      return NULL;
+    }
+
+    vibelang_shutdown();
+    free(source);
+
+    // Build the shared library
+    const char *rpath_flags = "";
+    const char *env_rpath = getenv("VIBELANG_RPATH_FLAGS");
+    if (env_rpath && *env_rpath)
+      rpath_flags = env_rpath;
+
+    char cmd[1024];
+    if (strlen(rpath_flags) > 0) {
+      snprintf(cmd, sizeof(cmd),
+               "gcc -shared -fPIC %s -o %s -lvibelang %s",
+               c_path, so_path, rpath_flags);
+    } else {
+      snprintf(cmd, sizeof(cmd),
+               "gcc -shared -fPIC %s -o %s -lvibelang",
+               c_path, so_path);
+    }
+
+    INFO("Building shared library %s", so_path);
+    if (system(cmd) != 0) {
+      ERROR("Failed to build shared library: %s", so_path);
+      return NULL;
+    }
   }
 
   // Load the shared object
