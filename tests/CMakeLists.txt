@@ -68,6 +68,12 @@ set_tests_properties(test_llm_integration PROPERTIES
   ENVIRONMENT "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib"
 )
 
+# Test that vibec embeds the correct rpath in generated shared libraries
+add_executable(test_vibec_rpath
+  unit/test_vibec_rpath.c
+)
+add_test(NAME test_vibec_rpath COMMAND test_vibec_rpath)
+
 # Create test data directory during build
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/unit/data)
 

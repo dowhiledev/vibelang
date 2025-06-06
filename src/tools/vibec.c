@@ -286,10 +286,28 @@ int main(int argc, char *argv[]) {
   }
   strcat(lib_file, ".so");
 
+  const char *prefix = getenv("PREFIX");
+  if (!prefix) {
+    prefix = "/usr/local";
+  }
+
+  char rpath[512];
+#ifdef __APPLE__
+  /*
+   * On macOS the runtime looks for libvibelang via @rpath. Embed both the
+   * install prefix and the plugin directory so users do not need to specify
+   * additional linker flags.
+   */
+  snprintf(rpath, sizeof(rpath),
+           "-Wl,-rpath,%s/lib -Wl,-rpath,@loader_path", prefix);
+#else
+  snprintf(rpath, sizeof(rpath), "-Wl,-rpath,%s/lib", prefix);
+#endif
+
   char cmd[512];
   snprintf(cmd, sizeof(cmd),
-           "gcc -shared -fPIC %s -o %s -lvibelang",
-           output_file, lib_file);
+           "gcc -shared -fPIC %s -o %s -lvibelang %s",
+           output_file, lib_file, rpath);
   INFO("Building shared library %s", lib_file);
   if (options.verbose) {
     INFO("Running: %s", cmd);
